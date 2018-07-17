@@ -1,0 +1,349 @@
+\documentclass{article}
+
+
+
+\usepackage[portrait, headheight = 0cm, margin=0.25cm, top = 0.25cm, nofoot]{geometry} 
+\usepackage[export]{adjustbox} 
+\usepackage{graphicx}
+\usepackage[dvipsnames,table]{xcolor} % [dvipsnames,table] for setting colors \usepackage{amsmath} \usepackage{xfrac}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric}
+\usetikzlibrary{shapes.misc}
+%\usetikzlibrary{external}
+%\tikzexternalize % activate!
+%\usepackage{sparklines}
+\usepackage{xfrac}
+\usepackage[space]{grffile}
+
+\DeclareRobustCommand\Tstrut{\rule{0pt}{2.6ex}}         % = `top' strut
+\DeclareRobustCommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}}   % = `bottom' strut
+\renewcommand{\familydefault}{\sfdefault}
+
+\begin{document}
+<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+# this chunk is common to all child documents
+require(stringi)
+require(scales)
+require(digest)
+require(clue)
+require(FRAPO)
+require(data.table)
+require(Matrix)
+require(Matrix.utils)
+require(magrittr)
+require(gsubfn)
+require(Hmisc)
+require(ggplot2)
+require(magick)
+require(DBI)
+require(readxl)
+require(Rblpapi)
+require(Rtsne)
+require(knitr)
+
+@
+
+
+\tableofcontents
+
+<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+
+
+source("https://raw.githubusercontent.com/satrapade/latex_utils/master/latex_helpers_v2.R")
+
+@
+
+\newpage
+\section{Page 4, Diversification}
+<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+tri<-function(n,d=1,s=1)(s*row(diag(n))<s*col(diag(n)))+d*diag(n)
+
+tret<- 50 %>% {rnorm(10000*.,mean=1,sd=1)} %>% {matrix(.,ncol=length(.)/10000)}
+ptfs<- tri(ncol(tret))%*%diag(1/seq(ncol(tret)))
+
+vars<-setNames(apply(tret%*%ptfs,2,var),seq(ncol(tret)))
+vols<-setNames(apply(tret%*%ptfs,2,sd),seq(ncol(tret)))
+sharpes<-setNames(apply(tret%*%ptfs,2,function(x)mean(x)/sd(x)),seq(ncol(tret)))
+
+diversification<-data.table(
+  assets=seq(ncol(tret)),
+  var=vars,
+  vol=vols
+) %>% 
+  melt(id.vars="assets",measure.vars=c("var","vol"))
+
+
+quality<-data.table(
+  assets=seq(ncol(tret)),
+  sharpe=sharpes
+) %>% 
+  melt(id.vars="assets",measure.vars=c("sharpe"))
+
+
+gg1 <- diversification %>% 
+  ggplot() + 
+  geom_vline(color=rgb(0.2,0.2,0.2),xintercept=4) +
+  geom_vline(color=rgb(0.2,0.2,0.2),xintercept=30) +
+  geom_line(aes(x=assets,y=value,col=variable),size=2) 
+
+gg2 <- quality %>% 
+  ggplot() + 
+  geom_vline(color=rgb(0.2,0.2,0.2),xintercept=4) +
+  geom_vline(color=rgb(0.2,0.2,0.2),xintercept=30) +
+  geom_line(aes(x=assets,y=value,col=variable),size=2) 
+
+ 
+@
+
+Page 4 of the ``Review of Technical Signals'' document examines the marginal reduction of portfolio variance as a function
+of the number of uncorrelated assets in the portfolio. The claim is that ``there is little diversification benefit for
+each currency we include beyond the major three or four''. A plot of portfolio variance and volatility as a function of 
+the number of i.i.d $\mu(1,1)$ variables added to the portfolio illustrates the argument:
+
+\begin{center}
+\Sexpr{make_plot(
+  plot(gg1),
+  width="15cm",
+  height="15cm",
+  envir=environment()
+)}
+\end{center}
+
+However:
+
+\begin{itemize}
+\item The ``\% of total variance explained`` is relevant for choosing the degrees of freedom we want our model to have.
+\item In the context of portfolio construction (which the notion of ``diversification'' applies to), \% of total variance 
+is not the relevant statistic. 
+\item What we care about is the portfolio sharpe ratio.
+\item Because: the metrics investors focus on (expected maximum drawdown, expected length of drawdown) scale with the sharpe ratio.
+\item The sharpe ratio scales inversely to portfolio volatility.
+\item We should examine how the sharpe ratio changes as we add assets to our portfolio.
+\item For uncorrelated assets with positive expected returns there is a clear benefit to ``returns quality'' well 
+beyond 4 assets.
+\end{itemize}
+
+\newpage 
+
+
+Specifically:
+
+\begin{itemize}
+\item If we plot the portfolio sharpe ratio vs number of assets, it is clear that the ``30-asset'' porfolio 
+has a sharpe ratio that is about \Sexpr{round(sharpes[30]/sharpes[4],digits=2)} times larger
+than the sharpe ratio of the ``4-asset'' portfolio. 
+\item This difference is definitely not immaterial. 
+\item The larger portfolio is much more appealing from the investor's perspective. 
+\item It is reasonable to expect that the larger basket would result in a more marketable product.
+\end{itemize}
+
+\begin{center}
+\Sexpr{make_plot(
+  plot(gg2),
+  width="15cm",
+  height="15cm",
+  envir=environment()
+)}
+\end{center}
+
+Moreover:
+
+\begin{itemize}
+\item Real-world assets have time-varying correlations. 
+\item The ``effective number of uncorrelated assets'' is smaller than the actual number of assets in the portfolio. 
+\item To protect against this effect, it is prudent to add as many assets as we can possibly identify since our 
+diversification estimates are quite likely to be optimistic during periods of market stress.
+\end{itemize}
+
+\vskip 5mm
+
+In conclusion:
+
+\begin{itemize}
+\item we recommend that the number of assets in any systematic strategy be limited by operational
+concerns and not by the expected marginal reduction of portfolio variance.
+\item currency liquidity should be viewed in relation to strategy AUM, not in relation to total
+FX market flows. There is no reason to exclude TRY, RUB, ZAR, BRL, DKK, PLN, TWD if market liquidity
+can accomodate expected position sizes. 
+\end{itemize}
+
+
+\newpage
+\section{Page 5, Splitting the opportunity set}
+
+An argument is made in favor of splitting the opportunity set (G10) into a ``trend'' subset (G3) and its
+complement (G10-ex-G3) used for ``reversion''. The argument rests on the following points:
+
+\vskip 5mm
+
+\begin{description}
+\item[Persistence] G3 has the largest marginal share of global FX volumes where trends are most likely. (Bigger ships are slower 
+to turn around)
+\item[Information content] G3 is most liquid and where most natural order flow is and so there is less transitory volatility 
+(noise)  as prices move before bringing in buyers/sellers
+\item[Liquidity] It is the most liquid representation of the exchange rate drivers across major economic blocs: North America, 
+Europe and Japan
+\item[Nature of flows] Exchange rates of these G3 economic blocs are dominated by capital flows rather the external trade 
+making them more likely to experience large cumulative deviations from exchange rate equilibrium
+\end{description}
+
+\vskip 5mm
+
+\begin{itemize}
+\item the reasons for splitting the investment universe into 2 groups are qualitative and vaque
+\item there is a significant body of academic research relating to these issues, it would be helpful if
+some references were given to present some substantial ecomomic motivation
+\end{itemize}
+
+
+\newpage
+\section{Page 6, Simulation results}
+
+\vskip 5mm
+
+We have 3 currency subsets (SUB1, SUB2, SUB3) and 3 signals (SIG1, SIG2, SIG3): 
+
+\vskip 5mm
+
+\begin{center}
+\begin{tabular}{l l}
+\hline
+SIG1 & Price Momentum \\
+SIG2 & Price Reversion \\
+SIG3 & Yield Momentum \\
+SUB1 & G3 \\
+SUB2 & G10 \\
+SUB3 & G10-ex-G3 \\
+\hline
+\end{tabular}
+\end{center}
+
+\vskip 5mm
+
+\begin{itemize}
+\item There are 9 combinations of individual signals with currency subsets that can produce ``Signal results''.
+\item We can then combine the resulting P\&L time-series to produce 511(=$2^9$-1) possible ``Portfolio results''.
+\item The number of possible combinations may be less depending on how the signals work. If the signals are
+use cross sectional ranks (which is usually referred to as ``Momentum'') then we have 511 resuls. If the signals
+are ``time-series trend'', i.e. longitudinal then the number of possible results is smaller. We dont have this information.
+\item Of the 511 possible combinations, 8 results are presented.
+\item It is important to understand the size of this ``implied search space'' to ascertain the possibility
+of overfitting
+\end{itemize}
+
+\vskip 5mm
+
+\begin{center}
+\begin{tabular}{l l l l}
+\hline
+\rowcolor{gray!20}
+\multicolumn{4}{c}{Results presented} \\
+\multicolumn{1}{l}{(Subset,Signal) combinations used} & 
+\multicolumn{1}{l}{Annualized Return} &
+\multicolumn{1}{l}{Sharpe} &
+\multicolumn{1}{l}{Volatility} \\
+(G10,Price Momentum) & 7 bps & 0 & 150 bps \\
+(G3,Price Momentum) & 67 bps & 0.43 & 150 bps \\
+(G10-ex-G3,Price Reversion)  & 196 bps & 0.66 & 296 bps \\
+(G10,Price Reversion)  & 179 bps & 0.61 & 296 bps \\
+(G3,Price Momentum)+(G10,Yield Momentum) & 330 bps & 0.67 & 500 bps \\
+(G10,Price Momentum)+(G10,Yield Momentum) & 186 bps & 0.37 & 500 bps \\
+(G10,Price Momentum)+(G10,Yield Momentum)+(G10,Price Reversion) & 488 bps & 0.93 & 528 bps\\
+(G3,Price Momentum)+(G10,Yield Momentum)+(G10,Price Reversion) & 636 bps & 1.18 & 538 bps \\
+\end{tabular}
+\end{center}
+
+\begin{itemize}
+\item Results should be normalized to a equal capital deployed for easy comparisons.
+\item With the exception of turnover statistics, only the resulting P\&L time-series are characterized.
+\item There is a significant improvement in sharpe ratio as individual time-series are combined, 
+presumably due to low correlation between portfolio constituents
+\item The mechanism for controlling turnover is not explained well.
+\item Price momentum P\&L on G3 looks very similar to what one would expect from a typical trend following
+strategy applied to this universe.
+\item Price momentum P\&L on G10 does not look similar to one would expect from a typical trend following
+strategy applied to this universe. Because G10 includes less liquid and more carry-driven currencies it
+is important to implement the trend signal properly. FX trend is known to work best for total-return
+time-series. Is does the input into the signal calculation take carry income into account?
+\end{itemize}
+
+
+\newpage
+\section{Page 13, Peer Review and Validation of Results }
+
+The decision to split the investment universe into a ``G3'' group for trend and 
+a ``G10-ex-G3'' group for mean reversion has a major impact on the performance of 
+the ``Price Return Momentum'' signal:
+
+\vskip 5mm
+
+\begin{center}
+\begin{tabular}{m{7cm} m{7cm}}
+\hline
+\rowcolor{gray!20}
+\multicolumn{2}{c}{Figure 4, page 6 of ``REVIEW OF TECHNICAL SIGNALS'' document} \\
+\Sexpr{web_png(
+  "https://user-images.githubusercontent.com/1358190/42832568-7fcd6a36-89e9-11e8-9f5c-dc7a3de86afd.PNG",
+  height="5cm",
+  width="7cm"
+)}
+&
+\Sexpr{web_png(
+"https://user-images.githubusercontent.com/1358190/42833184-5b9bc1f6-89eb-11e8-94e7-9ff47cddf0a9.png",
+  height="5cm",
+  width="7cm"
+)}
+\\
+\end{tabular}
+\end{center}
+
+\vskip 5mm
+
+\begin{itemize}
+
+\item it seems that the ``Price Momentum'' signal produces negative annualized returns of about -60bps for the 
+``G10-ex-G3'' group of currencies. 
+
+\item It is therefore important to justify the reasons for limiting the proposed price momentum signal to the 
+``G3'' subset.
+
+\end{itemize}
+
+
+On page 13, a reference is made to a ``Major/Minor Split Validation'' document, which seems to contain this
+analysis. We did not receive a copy of this document.
+
+
+\newpage
+\section{Benchmarking }
+
+Comparing the strategy with competitor results is useful.
+
+
+It should be quite easy to produce very simple, base-case systematic benchmarks with 
+identical portfolio construction methodology but simplistic signals (for example quarterly
+total returns for trend). These would be quite informative.
+
+\newpage
+\section{Final comments }
+
+
+\newpage
+\section{This document }
+
+\vskip 5mm
+
+\begin{center}
+\begin{tabular}{l l}
+\hline
+timestamp & \Sexpr{latexTranslate(as.character(Sys.timeDate()))} \\
+git id & \Sexpr{system("git rev-parse HEAD",TRUE)} \\
+user & \Sexpr{latexTranslate(gsub("\\\\","/",system("whoami",TRUE)))} \\
+\hline
+\end{tabular}
+\end{center}
+
+\vskip 5mm
+
+\end{document}
+
