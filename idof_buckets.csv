@@ -1,0 +1,338 @@
+root,level1_name,level1_id,level2_name,level2_id,level3_name,level3_id,level4_name,level4_id
+MagBucket,Cash,4998,Cash,5003,FxFuture,5021,FxFuture,5194
+MagBucket,Cash,4998,Cash,5003,FxForward,5022,FxForward,5195
+MagBucket,Cash,4998,Cash,5003,Cash,5023,Cash,5196
+MagBucket,Cash,4998,Cash,5003,CashCollateral,5024,CashCollateral,5197
+MagBucket,Cash,4998,Cash,5003,BondEtd,5025,BondEtd,5198
+MagBucket,Cash,4998,Cash,5003,BondOtc,5026,BondOtc,5199
+MagBucket,Cash,4998,Cash,5003,CertificateDeposit,5027,CertificateDeposit,5200
+MagBucket,Cash,4998,Cash,5003,CommercialPaper,5028,CommercialPaper,5201
+MagBucket,Cash,4998,Cash,5003,FundEtd,5029,FundEtd,5202
+MagBucket,Cash,4998,Cash,5003,FundOtc,5030,FundOtc,5203
+MagBucket,Equity,4999,Asian,5004,Equity_Australian_Equity_Future,5031,Equity_SPI_Future,5204
+MagBucket,Equity,4999,Asian,5004,Equity_Korean_Equity_Future,5032,Equity_KOSPI2_Future,5205
+MagBucket,Equity,4999,EM,5005,Equity_African_Equity_Future,5033,Equity_TOP40_Future,5206
+MagBucket,Equity,4999,EM,5005,Equity_Brazilian_Equity_Future,5034,Equity_IBOV_Future,5207
+MagBucket,Equity,4999,EM,5005,Equity_Chinese_Equity_Future,5035,Equity_HSCEI_Future,5208
+MagBucket,Equity,4999,EM,5005,Equity_Emerging_Equity_Upside,5036,Equity_EEM_Short_Put_Spread_Collar,5209
+MagBucket,Equity,4999,EM,5005,Equity_Indian_Equity_Future,5037,Equity_NIFTY_Future,5210
+MagBucket,Equity,4999,Euro,5006,Equity_European_Equity_Future,5038,Equity_SX5E_Future,5211
+MagBucket,Equity,4999,Euro,5006,Equity_European_Equity_Upside,5039,Equity_DAX_Call_Spread_Collar,5212
+MagBucket,Equity,4999,Euro,5006,Equity_European_Equity_Upside,5039,Equity_SX5E_Call_Spread_Collar,5213
+MagBucket,Equity,4999,Euro,5006,Equity_European_Equity_Upside,5039,Equity_SX5E_Short_Put_Spread_Collar,5214
+MagBucket,Equity,4999,Japan,5007,Equity_Japanese_Equity_Future,5040,Equity_NKY_Future,5215
+MagBucket,Equity,4999,UK,5008,Equity_UK_Equity_Future,5041,Equity_UKX_Future,5216
+MagBucket,Equity,4999,US,5009,Equity_US_Equity_Future,5042,Equity_SPX_Future,5217
+MagBucket,Equity,4999,US,5009,Equity_US_Equity_Upside,5043,Equity_SPX_Call_Spread_Collar,5218
+MagBucket,Equity,4999,US,5009,Equity_US_Equity_Upside,5043,Equity_SPX_Short_Put_Spread_Collar,5219
+MagBucket,Fixed Income,5000,Emerging Market Bonds,5010,Bonds_EM_BNYM_Corp,5044,Bonds_EM_BNYM_Corp,5220
+MagBucket,Fixed Income,5000,Emerging Market Bonds,5010,Bonds_EM_USD_IEMB,5045,Bonds_EM_USD_IEMB,5221
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_AUS_10yr,5046,Bonds_Gov_AUS_10yr,5222
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_EURO_BTP,5047,Bonds_Gov_EURO_BTP,5223
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_EURO_BTP_Short_Maturity,5048,Bonds_Gov_EURO_BTP_Short_Maturity,5224
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_EURO_BUND,5049,Bonds_Gov_EURO_BUND,5225
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_EURO_BUXL,5050,Bonds_Gov_EURO_BUXL,5226
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_EURO_OAT,5051,Bonds_Gov_EURO_OAT,5227
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_Insight_AM,5052,Bonds_Gov_Insight_AM,5228
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_Insight_G_ExUK,5053,Bonds_Gov_Insight_G_ExUK,5229
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_Insight_LM,5054,Bonds_Gov_Insight_LM,5230
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_Long_Dated_Gilt,5055,Bonds_Gov_Long_Dated_Gilt,5231
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_Short_EURO_BTP,5056,Bonds_Gov_Short_EURO_BTP,5232
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_Spanish_10yr,5057,Bonds_Gov_Spanish_10yr,5233
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_UK_Long_Gilt,5058,Bonds_Gov_UK_Long_Gilt,5234
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_US_10yr,5059,Bonds_Gov_US_10yr,5235
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_US_2yr,5060,Bonds_Gov_US_2yr,5236
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_US_5yr,5061,Bonds_Gov_US_5yr,5237
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_US_Long_Bond,5062,Bonds_Gov_US_Long_Bond,5238
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_US_Ultra,5063,Bonds_Gov_US_Ultra,5239
+MagBucket,Fixed Income,5000,High Yield,5012,Bonds_HY_EUR_IHYG,5064,Bonds_HY_EUR_IHYG,5240
+MagBucket,Fixed Income,5000,High Yield,5012,Bonds_HY_GBP_IS15,5065,Bonds_HY_GBP_IS15,5241
+MagBucket,Fixed Income,5000,High Yield,5012,Bonds_HY_Global_Insight_SD,5066,Bonds_HY_Global_Insight_SD,5242
+MagBucket,Fixed Income,5000,High Yield,5012,Bonds_HY_USD_STHY,5067,Bonds_HY_USD_STHY,5243
+MagBucket,Fixed Income,5000,Investment Grade,5013,Bonds_IG_EUR_BNYM,5068,Bonds_IG_EUR_BNYM,5244
+MagBucket,Fixed Income,5000,Investment Grade,5013,Bonds_IG_EUR_IBCX,5069,Bonds_IG_EUR_IBCX,5245
+MagBucket,Fixed Income,5000,Investment Grade,5013,Bonds_IG_EUR_IE15,5070,Bonds_IG_EUR_IE15,5246
+MagBucket,Fixed Income,5000,Investment Grade,5013,Bonds_IG_GBP_Insight_AM,5071,Bonds_IG_GBP_Insight_AM,5247
+MagBucket,Fixed Income,5000,Investment Grade,5013,Bonds_IG_GBP_Insight_LP,5072,Bonds_IG_GBP_Insight_LP,5248
+MagBucket,Fixed Income,5000,Investment Grade,5013,Bonds_IG_GBP_IS15,5073,Bonds_IG_GBP_IS15,5249
+MagBucket,Fixed Income,5000,Investment Grade,5013,Bonds_IG_GBP_SLXX,5074,Bonds_IG_GBP_SLXX,5250
+MagBucket,Fixed Income,5000,Investment Grade,5013,Bonds_IG_USD_LQDE,5075,Bonds_IG_USD_LQDE,5251
+MagBucket,Fixed Income,5000,Investment Grade,5013,Bonds_IG_USD_SDIG,5076,Bonds_IG_USD_SDIG,5252
+MagBucket,Real Assets,5001,Commodities,5014,Commodities_UBS_ETC,5077,Commodities_UBS_CMCI,5253
+MagBucket,Real Assets,5001,Infrastructure,5015,Infrastructure_3IN,5078,Infrastructure_3IN,5254
+MagBucket,Real Assets,5001,Infrastructure,5015,Infrastructure_AA4,5079,Infrastructure_AA4,5255
+MagBucket,Real Assets,5001,Infrastructure,5015,Infrastructure_BBGI,5080,Infrastructure_BBGI,5256
+MagBucket,Real Assets,5001,Infrastructure,5015,Infrastructure_DNA1,5081,Infrastructure_DNA1,5257
+MagBucket,Real Assets,5001,Infrastructure,5015,Infrastructure_DNA2,5082,Infrastructure_DNA2,5258
+MagBucket,Real Assets,5001,Infrastructure,5015,Infrastructure_GCP,5083,Infrastructure_GCP,5259
+MagBucket,Real Assets,5001,Infrastructure,5015,Infrastructure_HISL,5084,Infrastructure_HISL,5260
+MagBucket,Real Assets,5001,Infrastructure,5015,Infrastructure_INPP,5085,Infrastructure_INPP,5261
+MagBucket,Real Assets,5001,Infrastructure,5015,Infrastructure_JLIF,5086,Infrastructure_JLIF,5262
+MagBucket,Real Assets,5001,Infrastructure,5015,Infrastructure_TRIG,5087,Infrastructure_TRIG,5263
+MagBucket,Real Assets,5001,Infrastructure,5015,Infrastructure_UKW,5088,Infrastructure_UKW,5264
+MagBucket,Total Return Strategies,5002,Absolute Return,5016,Absolute_Return_Funds_AICCY,5089,Absolute_Return_Funds_AICCY,5265
+MagBucket,Total Return Strategies,5002,Absolute Return,5016,Absolute_Return_Funds_AICRD,5090,Absolute_Return_Funds_AICRD,5266
+MagBucket,Total Return Strategies,5002,Absolute Return,5016,Absolute_Return_Funds_AIEMD,5091,Absolute_Return_Funds_AIEMD,5267
+MagBucket,Total Return Strategies,5002,Absolute Return,5016,Absolute_Return_Funds_BNYARB,5092,Absolute_Return_Funds_BNYARB,5268
+MagBucket,Total Return Strategies,5002,Absolute Return,5016,Absolute_Return_Funds_SMIF,5093,Absolute_Return_Funds_SMIF,5269
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Australian_Equity_Upside,5094,Breakout_SPI_Call_Spread_Collar,5270
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Chinese_Equity_Downside,5095,Breakout_HSCEI_Put_Spread_Collar,5271
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Chinese_Equity_Upside,5096,Breakout_HSCEI_Call_Spread_Collar,5272
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Emerging_Equity_Upside,5097,Breakout_EEM_Call_Spread_Collar,5273
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Emerging_Equity_Upside,5097,Breakout_EEM_Short_Put_Spread_Collar,5274
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_European_Equity_Upside,5098,Breakout_SX5E_Call_Spread_Collar,5275
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_German_Bond_Downside,5099,Breakout_Euro_Bund_Put_Spread_Collar,5276
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_German_Equity_Upside,5100,Breakout_DAX_Call_Spread_Collar,5277
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_German_Equity_Upside,5100,Breakout_DAX_Short_Put_Spread_Collar,5278
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Hong_Kong_Equity_Upside,5101,Breakout_HSI_Call_Spread_Collar,5279
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Italian_Equity_Downside,5102,Breakout_FTSEMIB_Put_Spread_Collar,5280
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Italian_Equity_Downside,5102,Breakout_FTSEMIB_Risk_Reversal,5281
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Italian_Equity_Upside,5103,Breakout_FTSEMIB_Call_Spread_Collar,5282
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Japanese_Equity_Upside,5104,Breakout_NKY_Call_Spread_Collar,5283
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Japanese_Equity_Upside,5104,Breakout_NKY_Short_Put_Spread_Collar,5284
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Korean_Equity_Downside,5105,Breakout_KOSPI2_Risk_Reversal,5285
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Swiss_Equity_Upside,5106,Breakout_SMI_Call_Spread_Collar,5286
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Swiss_Equity_Upside,5106,Breakout_SMI_Risk_Reversal,5287
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_UK_Equity_Upside,5107,Breakout_UKX_Call_Spread_Collar,5288
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_UK_Equity_Upside,5107,Breakout_UKX_Call_Spread_Ratio,5289
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_UK_Equity_Upside,5107,Breakout_UKX_Risk_Reversal,5290
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_US_Bond_Upside,5108,Breakout_Treasury_Call_Spread_Collar,5291
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_US_Equity_Downside,5109,Breakout_SPX_Put_Spread_Collar,5292
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_US_Equity_Upside,5110,Breakout_SPX_Call,5293
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_US_Equity_Upside,5110,Breakout_SPX_Call_Spread_Collar,5294
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_US_Equity_Upside,5110,Breakout_SPX_Risk_Reversal,5295
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_US_High_Yield_Upside,5111,Breakout_HY_Call_Spread_Collar,5296
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_US_High_Yield_Upside,5111,Breakout_HY_Risk_Reversal,5297
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_US_Long_Bond_Downside,5112,Breakout_US_Long_Bond_Put,5298
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_US_Long_Bond_Upside,5113,Breakout_US_Long_Bond_Call_Spread_Collar,5299
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_VIX_Upside,5114,Breakout_VIX_Call,5300
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_VIX_Upside,5114,Breakout_VIX_Call_Spread_Collar,5301
+MagBucket,Total Return Strategies,5002,Dividends,5018,Dividends_DEDZ5_Option_Upside,5115,Dividends_DEDZ5_Call_Spread_Collar,5302
+MagBucket,Total Return Strategies,5002,Dividends,5018,Dividends_DEDZ6_Future,5116,Dividends_DEDZ6_Future,5303
+MagBucket,Total Return Strategies,5002,Dividends,5018,Dividends_DEDZ6_Option_Upside,5117,Dividends_DEDZ6_Call_Spread_Collar,5304
+MagBucket,Total Return Strategies,5002,Dividends,5018,Dividends_DEDZ7_Future,5118,Dividends_DEDZ7_Future,5305
+MagBucket,Total Return Strategies,5002,Dividends,5018,Dividends_DEDZ9_Future,5119,Dividends_DEDZ9_Future,5306
+MagBucket,Total Return Strategies,5002,Dividends,5018,Dividends_DJE50_Future,5120,Dividends_DJE50_Future,5307
+MagBucket,Total Return Strategies,5002,Dividends,5018,Dividends_MNDZ5_Future,5121,Dividends_MNDZ5_Future,5308
+MagBucket,Total Return Strategies,5002,Dividends,5018,Dividends_MNDZ6_Future,5122,Dividends_MNDZ6_Future,5309
+MagBucket,Total Return Strategies,5002,Dividends,5018,Dividends_NKY_Future,5123,Dividends_NKY_Future,5310
+MagBucket,Total Return Strategies,5002,Dividends,5018,Dividends_UKDZ5_Future,5124,Dividends_UKDZ5_Future,5311
+MagBucket,Total Return Strategies,5002,Dividends,5018,Dividends_UKDZ6_Future,5125,Dividends_UKDZ6_Future,5312
+MagBucket,Total Return Strategies,5002,Dividends,5018,Dividends_UKX_Future,5126,Dividends_UKX_Future,5313
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Australian_Equity_Sideways,5127,Range_Bound_SPI_Straddle,5314
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Brazilian_Equity_Sideways,5128,Range_Bound_EWZ_Iron_Fly,5315
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Chinese_Equity_Upside,5129,Range_Bound_HSCEI_Call_Fly,5316
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Emerging_Equity_Downside,5130,Range_Bound_EEM_Put_Spread_Ratio,5317
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_European_Equity_Downside,5131,Range_Bound_SX5E_Put_Fly,5318
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_European_Equity_Upside,5132,Range_Bound_SX5E_Call_Spread_Ratio,5319
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_French_Equity_Sideways,5133,Range_Bound_CAC_Straddle,5320
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Italian_Equity_Sideways,5134,Range_Bound_FTSEMIB_Straddle,5321
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Japanese_Equity_Upside,5135,Range_Bound_NKY_Call_Fly,5322
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Spanish_Equity_Sideways,5136,Range_Bound_IBEX_Straddle,5323
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Swiss_Equity_Upside,5137,Range_Bound_SMI_Call_Fly,5324
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_UK_Equity_Downside,5138,Range_Bound_UKX_Put_Spread_Ratio,5325
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_UK_Equity_Sideways,5139,Range_Bound_UKX_Iron_Fly,5326
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_UK_Equity_Sideways,5139,Range_Bound_UKX_Straddle,5327
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_UK_Equity_Upside,5140,Range_Bound_UKX_Call_Spread_Ratio,5328
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_US_Equity_Downside,5141,Range_Bound_SPX_Put_Spread_Ratio,5329
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_US_Equity_Sideways,5142,Range_Bound_SPX_Iron_Condor,5330
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_US_Equity_Sideways,5142,Range_Bound_SPX_Iron_Fly,5331
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_US_Equity_Upside,5143,Range_Bound_SPX_Call_Spread_Ratio,5332
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_US_Long_Bond_Downside,5144,Range_Bound_US_Long_Bond_Put_Spread_Ratio,5333
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_US_Small_Cap_Equity_Sideways,5145,Range_Bound_RUY_Straddle,5334
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_VIX_Sideways,5146,Range_Bound_VIX,5335
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_AUDUSD_Sideways,5147,Relative_Value_AUDUSD_Iron_Fly,5336
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_AUDUSD_Upside,5148,Relative_Value_AUDUSD_Call_Spread_Collar,5337
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Developed_Equity_Emerging_Equity,5149,Relative_Value_DM_EM,5338
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_EURJPY_Upside,5150,Relative_Value_EURJPY_Call_Spread_Collar,5339
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_EURNOK_Downside,5151,Relative_Value_EURNOK_Put_Spread_Collar,5340
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_European_Banks_European_Equity,5152,Relative_Value_SX7E_SX5E,5341
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_European_Equity_Put_US_Equity_Put,5153,Relative_Value_SX5E_SPX_Put,5342
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_European_Equity_US_Equity,5154,Relative_Value_EU_US,5343
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_EURUSD_Downside,5155,Relative_Value_EURUSD_Put_Spread_Collar,5344
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_EURUSD_Sideways,5156,Relative_Value_EURUSD_Iron_Fly,5345
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_EURUSD_Upside,5157,Relative_Value_EURUSD_Call_Spread_Collar,5346
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_GBPCHF_Upside,5158,Relative_Value_FX_GBPCHF,5347
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_GBPUSD_Downside,5159,Relative_Value_USDGBP_Put_Spread_Collar,5348
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_German_Equity_French_Equity,5160,Relative_Value_DAX_CAC,5349
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_German_Equity_US_Equity,5161,Relative_Value_DAX_SPX_Put,5350
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Indian_Equity_Emerging_Equity,5162,Relative_Value_India_EM,5351
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Irish_Bond_French_Bond,5163,Relative_Value_Irish_OAT,5352
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Italian_30yr_Bond_10yr_Bond,5164,Relative_Value_ITA30y_ITA10y,5353
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Italian_Bond_German_Bond,5165,Relative_Value_BTP_Bobl,5354
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Italian_Bond_German_Bond,5165,Relative_Value_BTP_Bund,5355
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Italian_Equity_Call_Spanish_Equity_Call,5166,Relative_Value_MIB_IBEX_Call,5356
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Italian_Equity_European_Equity,5167,Relative_Value_Italy_EU,5357
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Italian_Equity_Spanish_Equity,5168,Relative_Value_MIB_IBEX,5358
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Japanese_30yr_Bond_10yr_Bond,5169,Relative_Value_JGB_Curve,5359
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Japanese_30yr_Bond_10yr_Bond,5169,Relative_Value_JPY30y_JPY10y,5360
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Japanese_Equity_Korean_Equity,5170,Relative_Value_NKY_KOSPI2,5361
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Spanish_Bond_German_Bond,5171,Relative_Value_Bonos_Bund,5362
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Spanish_Bond_Italian_Bond,5172,Relative_Value_Bonos_BTP,5363
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Spanish_Equity_European_Equity,5173,Relative_Value_Spain_EU,5364
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Spanish_Equity_German_Equity,5174,Relative_Value_IBEX_DAX ,5365
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_UK_Bond_Italian_Bond,5175,Relative_Value_Gilt_JGB,5366
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_UK_Equity_Large_Cap_Small_Cap,5176,Relative_Value_UKX_MCX,5367
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_UK_Equity_Small_Cap_Large_Cap,5177,Relative_Value_MCX_UKX,5368
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_US_10yr_Bond_2yr_Bond,5178,Relative_Value_US10y_US2y,5369
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_US_10yr_Bond_5yr_Bond,5179,Relative_Value_US10y_US5y,5370
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_US_Equity_Broad_Technology,5180,Relative_Value_SPX_NDX,5371
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_US_Equity_European_Equity,5181,Relative_Value_US_EU,5372
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_US_Ultra_Bond_5yr_Bond,5182,Relative_Value_USUltra_US5y,5373
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDAUD_Upside,5183,Relative_Value_FX_USDAUD,5374
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDCAD_Upside,5184,Relative_Value_FX_USDCAD,5375
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDEUR_Upside,5185,Relative_Value_FX_USDEUR,5376
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDGBP_Sideways,5186,Relative_Value_USDGBP_Iron_Fly,5377
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDGBP_Upside,5187,Relative_Value_FX_USDGBP,5378
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDJPY_Upside,5188,Relative_Value_USDJPY_Call_Spread_Collar,5379
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDJPY_Upside,5188,Relative_Value_USDJPY_Short_Put_Spread_Collar,5380
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDKRW_Upside,5189,Relative_Value_FX_USDKRW,5381
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDMXN_Downside,5190,Relative_Value_USDMXN_Put_Spread_Collar,5382
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDSGD_Upside,5191,Relative_Value_FX_USDSGD,5383
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDTRY_Downside,5192,Relative_Value_USDTRY_Put_Spread_Collar,5384
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDZAR_Upside,5193,Relative_Value_FX_USDZAR,5385
+MagBucket,Fixed Income,5000,Emerging Market Bonds,5010,Bonds_EM_USD_IEML,5484,Bonds_EM_USD_IEML,5494
+MagBucket,Fixed Income,5000,High Yield,5012,Bonds_HY_USD_IHYU,5485,Bonds_HY_USD_IHYU,5495
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Italian_Equity_Upside,5103,Breakout_FTSEMIB_Skinny_Fly,5496
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_US_Equity_Upside,5110,Breakout_RUY_Risk_Reversal,5497
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Australian_Equity_Upside,5094,Breakout_SPI_Risk_Reversal,5498
+MagBucket,Total Return Strategies,5002,Dividends,5018,Dividends_DEDZ8_Future,5486,Dividends_DEDZ8_Future,5499
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Chinese_Equity_Sideways,5487,Range_Bound_HSCEI_Straddle,5500
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Nasdaq_Equity_Sideways,5488,Range_Bound_NDX_Iron_Fly,5501
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_European_Equity_Upside,5132,Range_Bound_SX5E_Call_Fly,5502
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_VIX_Sideways,5146,Range_Bound_VIX_Iron_Condor,5503
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Australian_10yr_Bond_German_10yr_Bond,5489,Relative_Value_AUS10y_BUND10y,5504
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_German_30yr_Bond_10yr_Bond,5490,Relative_Value_BUXL_BUND,5505
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDCNH_Upside,5491,Relative_Value_FX_USDCNH,5506
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_UK_10yr_Bond_German_10yr_Bond,5492,Relative_Value_UK10y_BUND10y,5507
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_UK_30yr_Bond_10yr_Bond,5493,Relative_Value_UK30y_UK10y,5508
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDGBP_Sideways,5186,Relative_Value_USDGBP_Iron_Condor,5509
+MagBucket,Fixed Income,5000,Government Bonds,5011,Bonds_Gov_Italian_30yr,5610,Bonds_Gov_Italian_30yr,5615
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_European_Credit_Upside,5611,Breakout_Crossover_Risk_Reversal,5616
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_Nov16,5617
+MagBucket,Equity,4999,US,5009,Equity_US_Equity_Upside,5043,Equity_SPX_Call,5618
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_South_African_Equity_Sideways,5612,Range_Bound_FTSEJSE_Straddle,5619
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_European_10yr_European_5yr_Credit_Spread,5613,Relative_Value_iTraxx_Main,5620
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_Aug16,5621
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_Oct16,5622
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_Sep16,5623
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Korean_Equity_Sideways,5629,Range_Bound_KOSPI2_Straddle,5630
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDINR_Downside,5631,Relative_Value_USDINR_Put_Spread_Collar,5632
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_DECO,5748
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Swiss_Equity_Sideways,5750,Range_Bound_SMI_Straddle,5751
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_TOWD,5755
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_European_Credit_Downside,5756,Range_Bound_Crossover_Put_Spread_Ratio,5757
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_HWKSM,5759
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_Dec16,5762
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_LWMC,5808
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_US_Inflation Linked Bond_UST_Future,5812,Relative_Value_US10y_ILB_US10y,5813
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_SAPPO,5827
+MagBucket,Equity,4999,US,5009,Equity_US_Equity_Downside,5829,Equity_SPX_Put,5830
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_VIX_Downside,5831,Breakout_VIX_Put,5832
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_German_Equity_Downside,5833,Breakout_DAX_Put_Spread_Collar,5834
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_European_Equity_Downside,5838,Breakout_DAX_Put,5839
+MagBucket,Fixed Income,5000,Emerging Market Bonds,5010,Bonds_EM_Downside,5842,Bonds_EM_Put,5843
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_Jan17,5847
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDKRW_Upside,5189,Relative_Value_USDKRW_Call_Spread_Collar,5857
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_US_Equity_Downside,5141,Range_Bound_RUY_Put_Spread_Ratio,5861
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Italian_10yr_Future_French_10yr_Future,5876,Relative_Value_Italy10y_France10y,5877
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_European_Equity_Sideways,5891,Range_Bound_SX5E_Iron_Condor,5892
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_TOWDV1X,5904
+MagBucket,Total Return Strategies,5002,Dividends,5018,Dividends_UKDZ8_Future,5905,Dividends_UKDZ8_Future,5906
+MagBucket,Equity,4999,Japan,5007,Equity_Japanese_Equity_Upside,5907,Equity_NKY_Call_Spread_Collar,5908
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_Feb17,5932
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_US_Equity_Emerging_Market_Equity,5933,Relative_Value_US_EM,5934
+MagBucket,Real Assets,5001,Commodities,5014,Commodities_UBS_ETC,5077,Commodities_UBS_CMCU,5946
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_German_Equity_Downside,5949,Range_Bound_DAX_Put_Spread_Ratio,5950
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_Mar17,5966
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_European_Volatility_Downside,5968,Breakout_V2X_Put,5969
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Italian_Equity_Downside,5999,Range_Bound_FTSEMIB_Put_Spread_Ratio,6000
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_US_Equity_Downside,5109,Breakout_RUY_Put_Spread_Collar,6001
+MagBucket,Equity,4999,Euro,5006,Equity_European_Equity_Downside,6015,Equity_SX5E_Put,6016
+MagBucket,Equity,4999,UK,5008,Equity_UK_Equity_Downside,6017,Equity_UKX_Put,6018
+MagBucket,Equity,4999,EM,5005,Equity_Emerging_Equity_Downside,6019,Equity_EEM_Put,6020
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_Apr17,6021
+MagBucket,Equity,4999,Japan,5007,Equity_Japanese_Equity_Downside,6022,Equity_NKY_Put,6023
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_STNLT,6046
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_RMS_28,6051
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_WARW,6071
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_May17,6141
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_European_Credit_Sideways,6146,Range_Bound_Crossover_Straddle,6147
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_ERLS,6148
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Japanese_Equity_Downside,6152,Range_Bound_NKY_Put_Spread_Ratio,6153
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Japanese_Equity_Downside,6176,Breakout_NKY_Put_Spread_Collar,6177
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_RIPON,6184
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_Jun17,6190
+MagBucket,Equity,4999,Euro,5006,Equity_European_Equity_Downside,6015,Equity_EURUSD_Put,6191
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_European_Equity_Upside,5098,Breakout_SX5E_Calendar_Call_Spread_Ratio,6198
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Global_HY_Global_IG_Spread,6220,Relative_Value_iTraxx_Crossover_iTraxx_Main,6221
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_Global_HY_Global_IG_Spread,6220,Relative_Value_CDX_HY_CDX_IG,6222
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_European_Equity_Downside,5131,Range_Bound_SX5E_Put_Spread_Ratio,6223
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_French_Equity_Upside,6225,Breakout_CAC_Risk_Reversal,6226
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_WARW_C,6254
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_Jul17,6255
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_MABLN,6256
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_German_Bond_Sideways,6289,Range_Bound_Bund_Straddle,6290
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_TOWD_GR1X,6304
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_Aug17,6311
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_US_30yr_Bond_5yr_Bond,6331,Relative_Value_US30y_US5y,6332
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_RMS_30,6339
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_WARW_2E,6342
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_Sep17,6358
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDTRY_Downside,5192,Relative_Value_USDTRY_Short_Risk_Reversal,6359
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_HWKSM_2D,6360
+MagBucket,Total Return Strategies,5002,Dividends,5018,Dividends_DEDZ0_Future,6363,Dividends_DEDZ0_Future,6364
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_DPF,6368
+MagBucket,Equity,4999,Japan,5007,Equity_Japanese_Equity_Downside,6022,Equity_NKY_Calendar_Put_Spread_Ratio,6402
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_Nov17,6445
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_Dec17,6446
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_TOGET,6466
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Swiss_Equity_Downside,6501,Range_Bound_SMI_Put_Spread_Ratio,6502
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_US_Credit_Sideways,6503,Range_Bound_CDX_HY_Straddle,6504
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDINR_Downside,5631,Relative_Value_USDINR_Short_Risk_Reversal,6505
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_TWRBG,6509
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_FSTNT,6511
+MagBucket,Equity,4999,US,5009,Equity_US_Equity_Downside,5829,Equity_SPX_Calendar_Put_Spread,6544
+MagBucket,Equity,4999,UK,5008,Equity_UK_Equity_Upside,6545,Equity_UKX_Call,6546
+MagBucket,Equity,4999,Asian,5004,Equity_Australian_Equity_Upside,6547,Equity_SPI_Call,6548
+MagBucket,Equity,4999,Euro,5006,Equity_European_Equity_Upside,5039,Equity_SX5E_Call,6549
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_TAURS,6588
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_GCS,6594
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_Jan18,6606
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_UK_Equity_Downside,6622,Breakout_UKX_Calendar_Put_Spread_Ratio,6623
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_US_Equity_Upside,5110,Breakout_SPX_Leveraged_Risk_Reversal,6625
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_US_Equity_Downside,5109,Breakout_SPX_Calendar_Put_Spread_Ratio,6629
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_European_Equity_Downside,5838,Breakout_SX5E_Calendar_Put_Spread_Ratio,6630
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_VIX_Curve_Steepener,5614,Relative_Value_VIX_Curve_Steepener_Feb18,6642
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDJPY_Downside,6644,Relative_Value_USDJPY_Put_Spread_Collar,6645
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Japanese_Equity_Upside,5104,Breakout_NKY_Call_Spread,6665
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Chinese_Equity_Downside,6666,Range_Bound_HSCEI_Put_Spread_Ratio,6667
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Delta_Hedge,6692,Breakout_Delta_Hedge_SPX,6693
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_PNERA,6696
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Chinese_Equity_Upside,5096,Breakout_HSCEI_Calendar_Call_Spread_Ratio,6699
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_US_Long_Bond_Upside,5113,Breakout_TLT_Call_Spread_Collar,6700
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_AUDUSD_Sideways,5147,Relative_Value_AUDUSD_Strangle,6701
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_US_Inflation Linked Bond_UST_Future,5812,Relative_Value_US_10y_Breakeven,6704
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Italian_Equity_Upside,5103,Breakout_FTSEMIB_Calendar_Call_Spread_Ratio,6708
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_US_Inflation Linked Bond_UST_Future,5812,Relative_Value_US_30y_Breakeven,6710
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Spanish_Equity_Upside,6711,Breakout_IBEX_Call_Spread_Collar,6712
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_US_10y_Upside,6713,Breakout_US_10y_Call_Spread_Collar,6714
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_US_Equity_Upside,5110,Breakout_SPX_Calendar_Call_Spread_Ratio,6727
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Delta_Hedge,6692,Breakout_Delta_Hedge_SX5E,6728
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Delta_Hedge,6692,Breakout_Delta_Hedge_EM,6729
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_US_Volatilty_Sideways,6733,Range_Bound_VIX_Iron Butterfly,6737
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_USDCAD_Sideways,6743,Relative_Value_USDCAD_Straddle,6744
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_ERLS_1A,6750
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_US_Equity_Upside,5110,Breakout_SPX_Calendar_Call_Spread_Collar,6758
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_UK_Equity_Upside,5107,Breakout_UKX_Leveraged_Call_Spread_Collar,6762
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_US_Volatilty_Sideways,6733,Range_Bound_VIX_Put_Ladder,6778
+MagBucket,Total Return Strategies,5002,Relative Value,5020,Relative_Value_German_10yr_Bond_2yr_Bond,6795,Relative_Value_BUND_SCHATZ,6796
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_European_Volatility_Upside,6806,Breakout_V2X_Call_Spread_Collar,6807
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Emerging_Debt_Upside,6814,Breakout_EMB_Risk_Reversal,6815
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Australian_Equity_Downside,6820,Range_Bound_SPI_Put_Spread_Ratio,6821
+MagBucket,Total Return Strategies,5002,Dividends,5018,Dividends_DEDZ1_Future,6834,Dividends_DEDZ1_Future,6835
+MagBucket,Total Return Strategies,5002,Breakout,5017,Breakout_Emerging_Debt_Upside,6814,Breakout_EMB_Call_Spread_Collar,6836
+MagBucket,Real Assets,5001,Real Estate and Securitised,5746,Securitised,5747,Securitised_RBBN,6837
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Japanese_Equity_Downside,6152,Range_Bound_NKY_Calendar_Put_Spread_Ratio,6846
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_European_Equity_Sideways,5891,Range_Bound_SX5E_Straddle,6861
+MagBucket,Total Return Strategies,5002,Range Bound,5019,Range_Bound_Global_Equity_Sideways,6862,Range_Bound_MSCI_Straddle,6863
