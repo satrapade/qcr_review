@@ -28,9 +28,13 @@ vignettes/*.pdf
 /*_cache/
 /cache/
 
-# Temporary files created by R markdown
+# Temporary files created by R markdown and knitr
 *.utf8.md
 *.knit.md
+*.toc
+*.tex
+*.log
+*.gz
 
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
