@@ -37,7 +37,6 @@ require(ggplot2)
 require(magick)
 require(DBI)
 require(readxl)
-require(Rblpapi)
 require(Rtsne)
 require(knitr)
 
@@ -48,6 +47,8 @@ require(knitr)
 
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
 
+x<-list.files(path="figure",full.names = TRUE)
+if(length(x)>0)file.remove(x)
 
 source("https://raw.githubusercontent.com/satrapade/latex_utils/master/latex_helpers_v2.R")
 
@@ -347,7 +348,7 @@ identical portfolio construction methodology but simplistic signals (for example
 total returns for trend). These would be quite informative.
 
 \newpage
-\section{Backtests}
+\section{Signals: Trend, Reversion}
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
 #
 # test simple backtest
@@ -365,166 +366,124 @@ ccy_tr <- fread("ccy_tr.csv") %>% # ccy returns
   {apply(log(.),2,diff)} %>%
   {structure(.%*%diag((0.05/16)/apply(.,2,sd)),dimnames=dimnames(.))} %>%
   {cbind(.,USD=rep(0,nrow(.)))}
-  
-# subsets
-g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
-g3<-head(g10,3)
-g10xg3<-tail(g10,-3)
-U<-colnames(ccy_tr)
-W<-setdiff(U,g10)
-
+ 
 # make cross returns from subsets
 universe2matrix<- . %>% 
   {outer(.,.,paste0)} %>% 
   {.[upper.tri(.)]} %>%
   {structure(ccy_tr[,stri_sub(.,1,3)]-ccy_tr[,stri_sub(.,-3,-1)],dimnames=list(rownames(ccy_tr),.))}
 
-# matrices of cross returns
-g3tr     <- universe2matrix(g3)
-g10tr    <- universe2matrix(g10)
-g10xg3tr <- universe2matrix(g10xg3)
-Utr      <- universe2matrix(U)
-
 # make matrix of signals: 3m total returns
-tret2sig <- . %>% 
-  {structure(apply(.,2,function(x)c(rep(0,90),roll_sum(x,n=91))),dimnames=dimnames(.))} %>%
-  {sign(.)}
-
-# matrixes of signals
-g3sig <- tret2sig(g3tr)
-g10sig <- tret2sig(g10tr)
-g10xg3sig <- tret2sig(g10xg3tr)
-Usig  <- tret2sig(Utr)
-
-g3perf<-rowMeans(head(g3sig,-1)*tail(g3tr,-1))
-g10perf<-rowMeans(head(g10sig,-1)*tail(g10tr,-1))
-g10xg3perf<-rowMeans(head(g10xg3sig,-1)*tail(g10xg3tr,-1))
-Uperf<-rowMeans(head(Usig,-1)*tail(Utr,-1))
-
-perf2plot<- function(x){
-  plot(cumsum(x),type="l",main=paste(substitute(x)," sharpe:",round(16*mean(x)/sd(x),digits=2)))
+tret2sig <- function(x,w=91){
+  tret<-structure(apply(x,2,function(p)c(rep(0,w-1),roll_sum(p,n=w))),dimnames=dimnames(x))
+  sign(tret)
 }
 
-a1<-"@{}l"
+backtest<-function(u,n,dir=1,w=91){
+  u_tr<-universe2matrix(u)
+  u_sig<-dir*tret2sig(u_tr,w=w)
+  u_perf<-head(u_sig,-1)*tail(u_tr,-1)
+  strat<-rowMeans(u_perf)
+  data.table(
+    name=n,
+    type=ifelse(dir>0,"trend","reversion"),
+    window=w,
+    universe=list(u),
+    pairs=list(colnames(u_tr)),
+    pair_perf=list(u_perf),
+    pair_sharpe=list(apply(u_perf,2,function(x)round(sqrt(356)*mean(x)/sd(x),digits=2))),
+    strat=list(strat),
+    sharpe=round(sqrt(356)*mean(strat)/sd(strat),digits=2),
+    vol=round(100*16*sd(strat),digits=2),
+    perf=round(100*356*mean(strat),digits=2)
+  )
+}
+
+# restricted universe
+g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
+
+subsets<-list(g10=g10,g3=head(g10,3),g10xg3=tail(g10,-3),U=colnames(ccy_tr),W=setdiff(colnames(ccy_tr),g10))
+
+# backtest
+results=list(
+  trend182_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=1,w=182),SIMPLIFY=FALSE)),
+  trend91_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=1,w=91),SIMPLIFY=FALSE)),
+  trend30_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=1,w=30),SIMPLIFY=FALSE)),
+  rev182_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=-1,w=182),SIMPLIFY=FALSE)),
+  rev91_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=-1,w=91),SIMPLIFY=FALSE)),
+  rev30_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=-1,w=30),SIMPLIFY=FALSE)),
+  rev14_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=-1,w=14),SIMPLIFY=FALSE))
+)
+
+results2df<-function(x)data.table(
+    name=x$name,
+    strat=x$type,
+    window=x$window,
+    pairs=structure(mapply(length,x$pairs),hdr=tbl(c("Pair","count"),align="@{}l")),
+    sharpe=structure(x$sharpe,hdr="Sharpe",format=quote(n_fmt(this))),
+    min_sharpe=structure(mapply(min,x$pair_sharpe),hdr=tbl(c("Min","sharpe"),align="@{}l"),format=quote(n_fmt(this))),
+    max_sharpe=structure(mapply(max,x$pair_sharpe),hdr=tbl(c("Max","sharpe"),align="@{}l"),format=quote(n_fmt(this))),
+    vol=structure(x$vol,hdr="Volatility",format=quote(n_fmt(this))),
+    perf=structure(x$perf,hdr="Performance",format=quote(n_fmt(this)))
+  )
+
+all_df<-do.call(rbind,mapply(results2df,results,SIMPLIFY = FALSE))[order(name)]
+
+results2plot<-function(x)data.table(
+  group=rep(x$name,times=mapply(length,x$strat)),
+  perf=do.call(c,mapply(cumsum,x$strat,SIMPLIFY=FALSE)),
+  date=as.Date(do.call(c,mapply(rownames,x$pair_perf,SIMPLIFY=FALSE)),format="%Y-%m-%d")
+)
+
+gg_trend<-results2plot(results$trend91_results) %>% 
+  ggplot() +
+  geom_line(aes(x=date,y=perf*100,col=group,group=group)) +
+  ggtitle(paste0("91-day Trend"))
+
+gg_rev<-results2plot(results$rev14_results) %>% 
+  ggplot() +
+  geom_line(aes(x=date,y=perf*100,col=group,group=group))+
+  ggtitle(paste0("14-day Reversion"))
+
+
 @
 
 We attempt to verify results presented in the document by testing a very simple
 time-series trend strategy on the proposed universe as well as a wider one.
-The signal is the sign of rolling 3m returns, so very very simple. Results seems
-to agree with the results presented in the document.
+The signal is the sign of rolling returns over a selection of windows. 
+Results seem to agree with the results presented in the document.
 
 \vskip 5mm
 
 \begin{center}
-\begin{tabular}{m{5cm} m{10cm}}
-\Sexpr{ntable(
-  df=rbind(
-    data.table(stat="Subset",value="g3"),
-    data.table(stat="Signal",value=tbl(c("sign","3month","rolling","total returns"),align=a1)),
-    data.table(stat="Pairs",value=comma(ncol(g3tr))),
-    data.table(stat="Sharpe",value=comma(16*mean(g3perf)/sd(g3perf),digits=2)),
-    data.table(stat="Vol",value=comma(16*100*sd(g3perf),digits=3)),
-    data.table(stat="Start",value=rownames(g3tr)[1]),
-    data.table(stat="End",value=tail(rownames(g3tr),1))
-  ),
-  align="l",
-  alternating=TRUE,
-  add_rownames=FALSE
-)}
-&
+\begin{tabular}{m{10cm} m{10cm}}
 \Sexpr{make_plot(
-  perf2plot(g3perf),
+  plot(gg_trend),
   width="10cm",
   height="10cm",
   envir=environment()
 )}
+&
+\Sexpr{make_plot(
+  plot(gg_rev),
+  width="10cm",
+  height="10cm",
+  envir=environment()
+)}
+\\
 \end{tabular}
 \end{center}
 
 \vskip 5mm
 
 \begin{center}
-\begin{tabular}{m{5cm} m{10cm}}
 \Sexpr{ntable(
-  df=rbind(
-    data.table(stat="Subset",value="g10"),
-    data.table(stat="Signal",value=tbl(c("sign","3month","rolling","total returns"),align=a1)),
-    data.table(stat="Pairs",value=comma(ncol(g10tr))),
-    data.table(stat="Sharpe",value=comma(16*mean(g10perf)/sd(g10perf),digits=2)),
-    data.table(stat="Vol",value=comma(16*100*sd(g10perf),digits=3)),
-    data.table(stat="Start",value=rownames(g10tr)[1]),
-    data.table(stat="End",value=tail(rownames(g10tr),1))
-  ),
-  align="l",
-  alternating=TRUE,
-  add_rownames=FALSE
+  df=all_df,
+  scale="0.75",
+  title="backtest result summary"
 )}
-&
-\Sexpr{make_plot(
-  perf2plot(g10perf),
-  width="10cm",
-  height="10cm",
-  envir=environment()
-)}
-\end{tabular}
 \end{center}
 
-
-\vskip 5mm
-
-\begin{center}
-\begin{tabular}{m{5cm} m{10cm}}
-\Sexpr{ntable(
-  df=rbind(
-    data.table(stat="Subset",value="g10xg3"),
-    data.table(stat="Signal",value=tbl(c("sign","3month","rolling","total returns"),align=a1)),
-    data.table(stat="Pairs",value=comma(ncol(g10xg3tr))),
-    data.table(stat="Sharpe",value=comma(16*mean(g10xg3perf)/sd(g10xg3perf),digits=2)),
-    data.table(stat="Vol",value=comma(16*100*sd(g10xg3perf),digits=3)),
-    data.table(stat="Start",value=rownames(g10xg3tr)[1]),
-    data.table(stat="End",value=tail(rownames(g10xg3tr),1))
-  ),
-  align="l",
-  alternating=TRUE,
-  add_rownames=FALSE
-)}
-&
-\Sexpr{make_plot(
-  perf2plot(g10xg3perf),
-  width="10cm",
-  height="10cm",
-  envir=environment()
-)}
-\end{tabular}
-\end{center}
-
-\vskip 5mm
-
-\begin{center}
-\begin{tabular}{m{5cm} m{10cm}}
-\Sexpr{ntable(
-  df=rbind(
-    data.table(stat="Subset",value="U"),
-    data.table(stat="Signal",value=tbl(c("sign","3month","rolling","total returns"),align=a1)),
-    data.table(stat="Pairs",value=comma(ncol(Utr))),
-    data.table(stat="Sharpe",value=comma(16*mean(Uperf)/sd(Uperf),digits=2)),
-    data.table(stat="Vol",value=comma(16*100*sd(Uperf),digits=3)),
-    data.table(stat="Start",value=rownames(Utr)[1]),
-    data.table(stat="End",value=tail(rownames(Utr),1))
-  ),
-  align="l",
-  alternating=TRUE,
-  add_rownames=FALSE
-)}
-&
-\Sexpr{make_plot(
-  perf2plot(Uperf),
-  width="10cm",
-  height="10cm",
-  envir=environment()
-)}
-\end{tabular}
-\end{center}
 
 
 \newpage

@@ -36,7 +36,9 @@ vignettes/*.pdf
 *.log
 *.gz
 *.synctex.gz
-
+*.pdf
+*.png
 
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
+.Rproj.user
