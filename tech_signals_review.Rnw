@@ -351,7 +351,7 @@ total returns for trend). These would be quite informative.
 \section{Signals: Trend, Reversion}
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
 #
-# test simple backtest
+# simple backtest 
 #
 
 require(data.table)
@@ -367,19 +367,24 @@ ccy_tr <- fread("ccy_tr.csv") %>% # ccy returns
   {structure(.%*%diag((0.05/16)/apply(.,2,sd)),dimnames=dimnames(.))} %>%
   {cbind(.,USD=rep(0,nrow(.)))}
  
+universe2pairs<-function(u,all_ccy=colnames(get("ccy_tr",parent.frame()))){
+  uo<-all_ccy[sort(match(u,all_ccy))]
+  m<-outer(uo,uo,paste0)
+  m[upper.tri(m)]
+}
+
 # make cross returns from subsets
 universe2matrix<- . %>% 
-  {outer(.,.,paste0)} %>% 
-  {.[upper.tri(.)]} %>%
+  universe2pairs %>%
   {structure(ccy_tr[,stri_sub(.,1,3)]-ccy_tr[,stri_sub(.,-3,-1)],dimnames=list(rownames(ccy_tr),.))}
 
-# make matrix of signals: 3m total returns
+# make matrix of signals: sign of rolling total returns
 tret2sig <- function(x,w=91){
   tret<-structure(apply(x,2,function(p)c(rep(0,w-1),roll_sum(p,n=w))),dimnames=dimnames(x))
   sign(tret)
 }
 
-backtest<-function(u,n,dir=1,w=91){
+backtest<-function(n,u,dir=1,w=91){ # name, universe, direction, window
   u_tr<-universe2matrix(u)
   u_sig<-dir*tret2sig(u_tr,w=w)
   u_perf<-head(u_sig,-1)*tail(u_tr,-1)
@@ -391,81 +396,232 @@ backtest<-function(u,n,dir=1,w=91){
     universe=list(u),
     pairs=list(colnames(u_tr)),
     pair_perf=list(u_perf),
-    pair_sharpe=list(apply(u_perf,2,function(x)round(sqrt(356)*mean(x)/sd(x),digits=2))),
+    pair_sharpe=list(apply(u_perf,2,function(x)sqrt(356)*mean(x)/sd(x))),
     strat=list(strat),
-    sharpe=round(sqrt(356)*mean(strat)/sd(strat),digits=2),
-    vol=round(100*16*sd(strat),digits=2),
-    perf=round(100*356*mean(strat),digits=2)
+    sharpe=sqrt(356)*mean(strat)/sd(strat),
+    vol=100*16*sd(strat),digits=2,
+    perf=100*356*mean(strat)
   )
 }
 
-# restricted universe
-g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
+backtest_subset<-function(n,u,dir,w,source_backtest){
+  u_pairs<-universe2pairs(u)
+  u_perf<-source_backtest$pair_perf[[1]][,u_pairs]
+  strat<-rowMeans(u_perf)
+  data.table(
+    name=n,
+    type=ifelse(dir>0,"trend","reversion"),
+    window=source_backtest$w[[1]],
+    pair_perf=list(u_perf),
+    pair_sharpe=list(source_backtest$pair_sharpe[[1]][u_pairs]),
+    sharpe=sqrt(356)*mean(strat)/sd(strat),
+    vol=100*16*sd(strat),digits=2,
+    perf=100*356*mean(strat)
+  )
+}
 
-subsets<-list(g10=g10,g3=head(g10,3),g10xg3=tail(g10,-3),U=colnames(ccy_tr),W=setdiff(colnames(ccy_tr),g10))
-
-# backtest
-results=list(
-  trend182_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=1,w=182),SIMPLIFY=FALSE)),
-  trend91_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=1,w=91),SIMPLIFY=FALSE)),
-  trend30_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=1,w=30),SIMPLIFY=FALSE)),
-  rev182_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=-1,w=182),SIMPLIFY=FALSE)),
-  rev91_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=-1,w=91),SIMPLIFY=FALSE)),
-  rev45_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=-1,w=45),SIMPLIFY=FALSE)),
-  rev30_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=-1,w=30),SIMPLIFY=FALSE))
-)
-
-results2df<-function(x)data.table(
-    name=x$name,
-    strat=x$type,
-    window=x$window,
-    pairs=structure(mapply(length,x$pairs),hdr=tbl(c("Pair","count"),align="@{}l")),
-    sharpe=structure(x$sharpe,hdr="Sharpe",format=quote(n_fmt(this))),
-    min_sharpe=structure(mapply(min,x$pair_sharpe),hdr=tbl(c("Min","sharpe"),align="@{}l"),format=quote(n_fmt(this))),
-    max_sharpe=structure(mapply(max,x$pair_sharpe),hdr=tbl(c("Max","sharpe"),align="@{}l"),format=quote(n_fmt(this))),
-    vol=structure(x$vol,hdr="Volatility",format=quote(n_fmt(this))),
-    perf=structure(x$perf,hdr="Performance",format=quote(n_fmt(this)))
+results2df<-function(x)data.table( # formatted results summary
+    name=structure(
+      x$name,
+      hdr=tbl(c("Subset","name"),align="@{}l")
+    ),
+    strat=structure(
+      x$type,
+      hdr=tbl(c("Strategy","type"),align="@{}l")
+    ),
+    window=structure(
+      x$window,
+      hdr=tbl(c("Window","size"),align="@{}l")
+    ),
+    pairs=structure(
+      mapply(length,x$pairs),
+      hdr=tbl(c("Pair","count"),align="@{}l")
+    ),
+    vol=structure(
+      x$vol,
+      hdr=tbl(c("Strat","vol"),align="@{}l"),
+      format=quote(n_fmt(round(this,digits=2)))
+    ),
+    perf=structure(
+      x$perf,
+      hdr=tbl(c("Strat","perf"),align="@{}l"),
+      format=quote(n_fmt(round(this,digits=2)))
+    ),
+    sharpe=structure(
+      x$sharpe,
+      hdr=tbl(c("Strat","sharpe"),align="@{}l"),
+      format=quote(n_fmt(round(this,digits=2)))
+    ),
+    min_sharpe=structure(
+      mapply(min,x$pair_sharpe),
+      hdr=tbl(c("Min","pair","sharpe"),align="@{}l"),
+      format=quote(n_fmt(round(this,digits=2)))
+    ),
+    max_sharpe=structure(
+      mapply(max,x$pair_sharpe),
+      hdr=tbl(c("Max","pair","sharpe"),align="@{}l"),
+      format=quote(n_fmt(round(this,digits=2)))
+    ),
+    mean_sharpe=structure(
+      mapply(mean,x$pair_sharpe),
+      hdr=tbl(c("Mean","pair","sharpe"),align="@{}l"),
+      format=quote(n_fmt(round(this,digits=2)))
+    )
   )
 
-all_df<-do.call(rbind,mapply(results2df,results,SIMPLIFY = FALSE))[order(name)]
-
-results2plot<-function(x)data.table(
+results2plot<-function(x)data.table( # results performance plot
   group=rep(x$name,times=mapply(length,x$strat)),
   perf=do.call(c,mapply(cumsum,x$strat,SIMPLIFY=FALSE)),
   date=as.Date(do.call(c,mapply(rownames,x$pair_perf,SIMPLIFY=FALSE)),format="%Y-%m-%d")
 )
 
-gg_trend<-results2plot(results$trend91_results) %>% 
+
+# restricted universe
+g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
+
+subsets<-list(g10=g10,g3=head(g10,3),g10xg3=tail(g10,-3),U=colnames(ccy_tr),W=setdiff(colnames(ccy_tr),g10))
+random_3subsets<-mapply(function(i)sample(colnames(ccy_tr),3),paste0("sample",1:700),SIMPLIFY=FALSE)
+random_7subsets<-mapply(function(i)sample(colnames(ccy_tr),7),paste0("sample",1:700),SIMPLIFY=FALSE)
+
+batch<-data.table(expand.grid(
+    n=names(subsets),
+    dir=c(-1,1),
+    w=c(91),
+    stringsAsFactors = FALSE
+)) %>% {.$u<-subsets[.$n];.}
+
+batch_trend_window<-data.table(expand.grid(
+    n=c("g3","g10xg3"),
+    dir=c(1),
+    w=as.integer(seq(from=10,to=360,length.out=50)),
+    stringsAsFactors = FALSE
+)) %>% {.$u<-subsets[.$n];.}
+
+batch_trend_3subsets<-data.table(expand.grid(
+    n=names(random_3subsets),
+    dir=c(1),
+    w=91,
+    stringsAsFactors = FALSE
+)) %>% {.$u<-random_3subsets[.$n];.}
+
+batch_trend_7subsets<-data.table(expand.grid(
+    n=names(random_7subsets),
+    dir=c(1),
+    w=91,
+    stringsAsFactors = FALSE
+)) %>% {.$u<-random_7subsets[.$n];.}
+
+batch_result<-do.call(rbind,do.call(mapply,c(backtest,batch,SIMPLIFY=FALSE)))
+batch_trend_window_result<-do.call(rbind,do.call(mapply,c(backtest,batch_trend_window,SIMPLIFY=FALSE)))
+
+batch_all_91trend_result<-backtest("U",colnames(ccy_tr),91,1)
+
+batch_trend_3subsets_result<-c(
+  backtest_subset,
+  batch_trend_3subsets,
+  MoreArgs=list(source_backtest=batch_all_91trend_result),
+  SIMPLIFY=FALSE
+) %>%
+{do.call(mapply,.)} %>%
+{do.call(rbind,.)}
+  
+  
+
+batch_trend_7subsets_result<-do.call(rbind,do.call(mapply,c(backtest,batch_trend_7subsets,SIMPLIFY=FALSE)))
+
+
+
+
+gg_trend<-results2plot(batch_result[type=="trend" & window==91]) %>% 
   ggplot() +
   geom_line(aes(x=date,y=perf*100,col=group,group=group)) +
   ggtitle(paste0("91-day Trend"))
 
-gg_rev<-results2plot(results$rev45_results) %>% 
+gg_rev<-results2plot(batch_result[type=="reversion" & window==91]) %>% 
   ggplot() +
   geom_line(aes(x=date,y=perf*100,col=group,group=group))+
   ggtitle(paste0("45-day Reversion"))
 
 
+
+
 @
 
-We attempt to verify results presented in the document by testing a very simple
-time-series trend strategy on the proposed universe as well as a wider one.
-The signal is the sign of rolling returns over a selection of windows. 
-Results seem to agree with the results presented in the document.
+We would like to understand how parameter selection drives strategy performance. Because we do not have
+access to the actual implementation, we construct a very simple trend model which we beliece captures 
+the essential characteristics of a trend strategy. The model uses a single signal: the sign of total 
+returns over a rolling window. If the sign is positive, we go long. If negative we go short. Otherwise
+we take no position. This is the simplest signal one can construct. In addition, doing the reverse 
+corresponds to a mean reversion strategy. No thresholds or significance tests are used. This is a benchmark,
+not a strategy. 
+
+Strategy parameters are:
+
+\begin{itemize}
+\item Currency universe
+\item Window length
+\end{itemize}
+
 
 \vskip 5mm
 
 \begin{center}
-\begin{tabular}{m{10cm} m{10cm}}
 \Sexpr{make_plot(
   plot(gg_trend),
+  width="15cm",
+  height="15cm",
+  envir=environment()
+)}
+\end{center}
+
+\vskip 5mm
+
+\begin{center}
+\Sexpr{ntable(
+  df=results2df(batch_result)[strat=="trend"],
+  scale="0.75",
+  title="backtest result summary"
+)}
+\end{center}
+
+\newpage
+\section{Sensitivity to parameters}
+<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+
+gg_window <- results2df(batch_trend_window_result) %>%
+  melt(id.vars=c("name","window"),measure.vars="sharpe",variable.name="stat",value.name="sharpe") %>%
+  ggplot() +
+  geom_line(aes(x=window,y=sharpe,col=name),size=2)+
+  ggtitle(paste0("Sharpe vs window length"))
+
+gg_3subset <- results2df(batch_trend_3subsets_result) %>%
+  ggplot(aes(x=sharpe)) +
+  geom_histogram(bins=50)+
+  ggtitle(paste0("Sharpe vs 3-currency subset selection"))+
+  geom_vline(xintercept = results2df(batch_result)[strat=="trend" & name=="g3",sharpe],color=rgb(1,0,0),alpha=0.5,size=2)
+
+gg_7subset <- results2df(batch_trend_7subsets_result) %>%
+  ggplot(aes(x=sharpe)) +
+  geom_histogram(bins=50)+
+  ggtitle(paste0("Sharpe vs 7-currency subset selection"))+
+  geom_vline(xintercept = results2df(batch_result)[strat=="trend" & name=="g10xg3",sharpe],color=rgb(1,0,0),alpha=0.5,size=2)
+
+@
+\vskip 5mm
+
+\begin{center}
+\begin{tabular}{m{10cm} m{10cm}}
+\multicolumn{1}{c}{Random vs actual 3-ccy choice} &
+\multicolumn{1}{c}{Random vs actual 7-ccy choice} \\
+\Sexpr{make_plot(
+  plot(gg_3subset),
   width="10cm",
   height="10cm",
   envir=environment()
 )}
 &
 \Sexpr{make_plot(
-  plot(gg_rev),
+  plot(gg_7subset),
   width="10cm",
   height="10cm",
   envir=environment()
@@ -474,16 +630,15 @@ Results seem to agree with the results presented in the document.
 \end{tabular}
 \end{center}
 
-\vskip 5mm
 
 \begin{center}
-\Sexpr{ntable(
-  df=all_df,
-  scale="0.75",
-  title="backtest result summary"
+\Sexpr{make_plot(
+  plot(gg_window),
+  width="10cm",
+  height="10cm",
+  envir=environment()
 )}
 \end{center}
-
 
 
 \newpage
@@ -504,4 +659,3 @@ user & \Sexpr{latexTranslate(gsub("\\\\","/",system("whoami",TRUE)))} \\
 \vskip 5mm
 
 \end{document}
-
