@@ -2,12 +2,9 @@
 # test simple backtest
 #
 
-require(DBI)
-require(gsubfn)
 require(data.table)
 require(stringi)
 require(magrittr)
-require(FactoMineR)
 require(RcppRoll)
 
 # ccy total returns matrix
@@ -24,25 +21,25 @@ g3<-head(g10,3)
 g10xg3<-tail(g10,-3)
 
 # make cross returns from subsets
-universe2matrix<- . %>% 
+universe2matrix_o<- . %>% 
   {outer(.,.,paste0)} %>% 
   {.[upper.tri(.)]} %>%
   {structure(ccy_tr[,stri_sub(.,1,3)]-ccy_tr[,stri_sub(.,-3,-1)],dimnames=list(rownames(ccy_tr),.))}
 
 # matrices of cross returns
-g3tr     <- universe2matrix(g3)
-g10tr    <- universe2matrix(g10)
-g10xg3tr <- universe2matrix(g10xg3)
+g3tr     <- universe2matrix_o(g3)
+g10tr    <- universe2matrix_o(g10)
+g10xg3tr <- universe2matrix_o(g10xg3)
 
 # make matrix of signals: 3m total returns
-tret2sig <- . %>% 
+tret2sig_o <- . %>% 
   {structure(apply(.,2,function(x)c(rep(0,90),roll_sum(x,n=91))),dimnames=dimnames(.))} %>%
   {sign(.)}
 
 # matrixes of signals
-g3sig <- tret2sig(g3tr)
-g10sig <- tret2sig(g10tr)
-g10xg3sig <- tret2sig(g10xg3tr)
+g3sig <- tret2sig_o(g3tr)
+g10sig <- tret2sig_o(g10tr)
+g10xg3sig <- tret2sig_o(g10xg3tr)
 
 g3perf<-rowMeans(head(g3sig,-1)*tail(g3tr,-1))
 g10perf<-rowMeans(head(g10sig,-1)*tail(g10tr,-1))
