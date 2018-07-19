@@ -388,6 +388,8 @@ tret2sig <- function(x,w=91){
   sign(tret)
 }
 
+sharpe<-function(strat)sqrt(356)*mean(strat)/sd(strat)
+
 backtest<-function(n,u,dir=1,w=91,tret=get("ccy_tr",parent.frame())){ # name, universe, direction, window
   u_tr<-universe2matrix(u,tret=tret)
   u_sig<-tret2sig(u_tr,w=w)*dir
@@ -402,7 +404,7 @@ backtest<-function(n,u,dir=1,w=91,tret=get("ccy_tr",parent.frame())){ # name, un
     pair_perf=list(u_perf),
     pair_sharpe=list(apply(u_perf,2,function(x)sqrt(356)*mean(x)/sd(x))),
     strat=list(strat),
-    sharpe=sqrt(356)*mean(strat)/sd(strat),
+    sharpe=sharpe(strat),
     vol=100*16*sd(strat),digits=2,
     perf=100*356*mean(strat)
   )
@@ -423,7 +425,7 @@ backtest_subset<-function(n,u,dir,w,tret,source_backtest){
     pair_perf=list(u_perf),
     pair_sharpe=list(source_backtest$pair_sharpe[[1]][u_pairs]),
     strat=list(strat),
-    sharpe=sqrt(356)*mean(strat)/sd(strat),
+    sharpe=sharpe(strat),
     vol=100*16*sd(strat),digits=2,
     perf=100*356*mean(strat)
   )
@@ -578,9 +580,9 @@ batch_trend_7subsets_result<-c(
 {do.call(rbind,.)}
   
 batch_trend_10subsets_result<-c(
-  list(FUN=backtest_subset),
+  list(FUN=backtest_subset_ls),
   batch_trend_10subsets,
-  list(MoreArgs=list(tret=ccy_tr,source_backtest=batch_all_91trend_result)),
+  list(MoreArgs=list(tret=ccy_tr,source_backtest=batch_all_91trend_result,s=3)),
   list(SIMPLIFY=FALSE)
 ) %>%
 {do.call(mapply,.)} %>%
@@ -659,6 +661,16 @@ gg_7subset <- results2df(batch_trend_7subsets_result) %>%
   geom_histogram(bins=50)+
   ggtitle(paste0("Sharpe vs 7-currency subset selection"))+
   geom_vline(xintercept = results2df(batch_result)[strat=="trend" & name=="g10xg3",sharpe],color=rgb(1,0,0),alpha=0.5,size=2)
+
+strat_long<-batch_result[type=="trend" & name=="g3",strat][[1]]
+strat_short<-batch_result[type=="trend" & name=="g10xg3",strat][[1]]
+
+gg_10subset <- results2df(batch_trend_10subsets_result) %>%
+  ggplot(aes(x=sharpe)) +
+  geom_histogram(bins=50)+
+  ggtitle(paste0("Sharpe vs 3vs7-currency subset selection"))+
+  geom_vline(xintercept = sharpe(strat_long-strat_short),color=rgb(1,0,0),alpha=0.5,size=2)
+
 
 @
 \vskip 5mm
