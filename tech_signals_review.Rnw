@@ -411,8 +411,8 @@ results=list(
   trend30_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=1,w=30),SIMPLIFY=FALSE)),
   rev182_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=-1,w=182),SIMPLIFY=FALSE)),
   rev91_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=-1,w=91),SIMPLIFY=FALSE)),
-  rev30_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=-1,w=30),SIMPLIFY=FALSE)),
-  rev14_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=-1,w=14),SIMPLIFY=FALSE))
+  rev45_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=-1,w=45),SIMPLIFY=FALSE)),
+  rev30_results=do.call(rbind,mapply(backtest,u=subsets,n=names(subsets),MoreArgs=list(dir=-1,w=30),SIMPLIFY=FALSE))
 )
 
 results2df<-function(x)data.table(
@@ -440,10 +440,10 @@ gg_trend<-results2plot(results$trend91_results) %>%
   geom_line(aes(x=date,y=perf*100,col=group,group=group)) +
   ggtitle(paste0("91-day Trend"))
 
-gg_rev<-results2plot(results$rev14_results) %>% 
+gg_rev<-results2plot(results$rev45_results) %>% 
   ggplot() +
   geom_line(aes(x=date,y=perf*100,col=group,group=group))+
-  ggtitle(paste0("14-day Reversion"))
+  ggtitle(paste0("45-day Reversion"))
 
 
 @
