@@ -696,14 +696,25 @@ gg_10subset <- results2df(batch_trend_10subsets_result) %>%
 \end{tabular}
 \end{center}
 
-
 \begin{center}
+\begin{tabular}{m{10cm} m{10cm}}
+\multicolumn{1}{c}{Random vs actual 3vs7-ccy choice} &
+\multicolumn{1}{c}{Window size} \\
+\Sexpr{make_plot(
+  plot(gg_10subset),
+  width="10cm",
+  height="10cm",
+  envir=environment()
+)}
+&
 \Sexpr{make_plot(
   plot(gg_window),
   width="10cm",
   height="10cm",
   envir=environment()
 )}
+\\
+\end{tabular}
 \end{center}
 
 
