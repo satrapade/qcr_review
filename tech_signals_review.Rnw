@@ -2,7 +2,7 @@
 
 
 
-\usepackage[portrait, headheight = 0cm, margin=0.25cm, top = 0.25cm, nofoot]{geometry} 
+\usepackage[portrait, headheight = 0cm, margin=0.25cm, top = 0.25cm]{geometry} 
 \usepackage[export]{adjustbox} 
 \usepackage{graphicx}
 \usepackage[dvipsnames,table]{xcolor} % [dvipsnames,table] for setting colors \usepackage{amsmath} \usepackage{xfrac}
@@ -14,6 +14,7 @@
 %\usepackage{sparklines}
 \usepackage{xfrac}
 \usepackage[space]{grffile}
+\usepackage{hyperref}
 
 \DeclareRobustCommand\Tstrut{\rule{0pt}{2.6ex}}         % = `top' strut
 \DeclareRobustCommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}}   % = `bottom' strut
@@ -70,7 +71,79 @@ qcr_ccys<-c(
 @
 
 \newpage
-\section{Page 4, Diversification}
+\section{``Review of Technical Signals'' document}
+
+\subsection{The signals}
+
+\vskip 5mm
+
+The document begins by introducing the singals used by the proposed strategy. As per the document, these signals considered 
+to be ``robust representations of factor risk premia``. The specific mapping is not clearly and explicitly presented
+in the introduction, but it is fairly straight-forward \footnote{Ang, Andrew. A systematic Approach to Factor Investing.  
+Oxford University Press 2014}. The document states that 
+
+We were not able to decide which premium is captured by the ``yield momentum'' signal. 
+
+
+\vskip 5mm
+
+\begin{center}
+\begin{tabular}{l l l}
+\hline
+\multicolumn{3}{c}{QCR signals} \\
+\hline
+signal & type & risk premium \\
+price momentum & technical & momentum \\
+price reversion & technical & volatility \\
+yield momentum &  fundamental & {\bf no risk premium presented} \\
+risk-adjusted yield & fundamental & value/carry\\
+long-term fair value & fundamental & value/carry \\
+short-term fair value & fundamental & value/carry \\
+\end{tabular}
+\end{center}
+
+
+\vskip 5mm
+
+\begin{center}
+\begin{tabular}{c}
+\hline
+\rowcolor{gray!20}
+Risk factors associated to risk premia and asset classes in {\bf ANG}, 2014 \\
+\Sexpr{web_png(
+  "https://user-images.githubusercontent.com/1358190/42994323-b1dd6fe4-8c05-11e8-92e6-1c64972ed88c.png",
+  height="10cm",
+  width="15cm"
+)}
+\end{tabular}
+\end{center}
+
+
+
+\noindent Some of these risk factors do not behave as one would expect them to behave, these are usually called  , ``time-series momentum'' is considered to be a ``market anomaly'', 
+not a ``risk-premium'' \footnote{For example see the introduction in Tobias J. Moskowitz, Yao Hua Ooi, Lasse Heje Pedersen. 
+Time series momentum. Journal of Financial Economics 104(2012) 228-250}.
+
+\vskip 5mm
+
+Anomalies, in addition to momentum, include the various calendar effects in equities  and fairly large list of other 
+``price patterns'', not all of which are exploitable. Price momentum is the most important entry in the list of
+anomalies. The two concepts are not orthogonal, but they are sufficiently different in the minds of most informed investors
+that one should make an effort to align terminology to general useage. 
+
+\vskip 5mm
+
+\noindent It might be helpful to exactly spell out what the specific risk-premia are that we aim to capture. 
+
+\vskip 5mm
+
+\href{https://s3.amazonaws.com/papers-documentation/Books+-+Market+Factors/(Financial+Management+Association+Survey+and+Synthesis+Series)+Andrew+Ang-Asset+Management_+A+Systematic+Approach+to+Factor+Investing-Oxford+University+Press+(2014)+(1).pdf}{\bf 
+Ang, Andrew. A systematic Approach to Factor Investing. Oxford University Press 2014}
+
+\noindent Furthermore, the signals are 
+
+\newpage
+\subsection{``Diminishing returns to diversification''}
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
 tri<-function(n,d=1,s=1)(s*row(diag(n))<s*col(diag(n)))+d*diag(n)
 
@@ -117,6 +190,8 @@ gg2 <- quality %>%
 
  
 @
+
+The document
 
 Page 4 of the ``Review of Technical Signals'' document examines the marginal reduction of portfolio variance as a function
 of the number of uncorrelated assets in the portfolio. The claim is that ``there is little diversification benefit for
