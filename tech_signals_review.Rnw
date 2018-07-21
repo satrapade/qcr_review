@@ -135,21 +135,16 @@ worth noting that there are many more ``anomalies'' than there are pure ``risk p
 
 \vskip 5mm
 
-Summary of technical signal investigation:
+Summary of items:
 
 \vskip 5mm
 
 \begin{enumerate}
-\item Although momentum and reversion are assigned to different risk factors, their implementation is identical, up to a sign. 
-\item Both price and momentum reversion rely on a trend signal, but they trade ``opposite'' positions. 
-\item Price reversion sells the asset after positive performance and buys after negative performannce. 
-\item Price momentum buys after gains and sells after losses.
-\item We verify that these signals are derived from a longitudinal, time-series trend indicator.
-\item We examine the parameter space and asses potential for over-fitting inherent in parameter choices made.
-\item A trend strategy has 2 important parameters: The {\bf investment universe} and the {\bf trend estimation window}.
-\item To evaluate how the signal behaves over its parameters space, we need to run the strategy multiple times, with different parameters.
-\item We use a very, very simple trend model as a proxy for the ``real'' strategy. The fit is suprisingly good, we expect conclusions
-relating to this proxy to carry over well to the actual model.
+\item Analysis of the indicator used by the reversion and the momentum strategies. These appear to be driven by 
+the same indicator
+\item Review of proposed currency split and arguments motivating presented choises
+\item Backtest results relating to currency splits
+\item Selected parameters, parameter sensitivity
 \end{enumerate}
 
 
@@ -273,11 +268,13 @@ rolling price range. This signal appears to be a better match than simple total 
 \item As per the document, our universe is all currency pairs derived from the g10 set of currencies.
 \item We use a momentum strategy with the trend signal applied to pairs derived from the g3 universe subset
 \item We use a reversion strategy with the trend signal applied to pairs derived from the g10xg3 universe subset
+\item Remaining pairs are not used
 \item We select a window size that maximizes correlation between proxy signals and actual signals
-\item Achieved correlation of daily returns is high: \Sexpr{round(100*cor(qcr_strat,qcrb_strat),digits=1)}. 
-We believe this suggests that our benchmark captures a large part of 
-actual signal behaviour
-\item We can now use our proxy to understand the parameter space of the price momentum and price reversion signals
+\item Achieved correlation of daily returns to the actual proposed strategy is high: {\bf 
+\Sexpr{round(100*cor(qcr_strat,qcrb_strat),digits=1)}}. It is very likely that actual signals
+are quite similar to the ones used by the proxy. The benchmark captures a large part of actual 
+signal behaviour, conclusions should transfer well
+\item momentum and reversion strategies use the same type of signal
 \end{enumerate}
 
 
@@ -794,10 +791,13 @@ gg_10subset <- results2df(batch_trend_10subsets_result) %>%
 \item Backtest results suggest that the technical signals capture a persistent source of alpha
 \item Returns are not due to risk premium collected through exposure to risk factors.
 \item Pure risk factor exposure does not appear to be profitable in the selected universe
-\item Almost all returns are coming from a specific view on structural differences in parts
-of the FX market
-\item The excess return due to this view is makes this strategy more valuable than a simple 
-beta product. On the other hand, it might prevent marketing it as such
+\item Almost all returns are coming from two specific views relating to features of the FX market
+\item Firstly, that the g3 subset trends while the g10xg3 subset mean-reverts.
+\item Secondly, that price reversions are faster and require a shorter signal window than
+momentum strategies
+\item These views have worked and this excess performance makes the strategy more attractice 
+than a simple beta product. On the other hand, this same reason might prevent marketing
+the strategy as being purely driven by risk premia
 
 \end{itemize}
 
