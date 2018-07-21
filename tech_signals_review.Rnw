@@ -166,7 +166,14 @@ sharpe<-function(strat)sqrt(356)*mean(strat)/sd(strat)
 # make matrix of signals: sign of rolling total returns
 tret2sig <- function(x,w=91){
   tret<-structure(apply(x,2,function(p)c(rep(0,w-1),roll_sum(p,n=w))),dimnames=dimnames(x))
-  sign(tret)
+  rng<-structure(apply(x,2,function(p){
+    px<-cumsum(p)
+    pxmax<-roll_max(px,n=w)
+    pxmin<-roll_min(px,n=w)
+    rng<-2*((tail(px,-(w-1))-pxmin)/(pxmax-pxmin)-0.5)
+    c(rep(0,w-1),rng)
+  }),dimnames=dimnames(x))
+  rng*(abs(rng)>0.25)
 }
 g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
 
@@ -239,7 +246,13 @@ gg_qcr<-data.table(
 gg_cv<- cv %>%
   ggplot() + 
   geom_line(aes(x=w,y=100*value,col=subset,group=variable),size=2,alpha=0.66) +
-  ggtitle(paste0("QCR-Benchmark correlation vs Benchmark window plots."))
+  ggtitle(paste0("QCR-Benchmark signal correlation vs Benchmark window plots"))
+
+gg_cv1<- wstats[,.(w,g3_mean_cor,g10xg3_mean_cor)] %>%
+  {melt(.,id.vars="w",measure.vars=colnames(.)[-1])} %>%
+  ggplot() + 
+  geom_line(aes(x=w,y=100*value,col=variable,group=variable),size=2,alpha=0.66) +
+  ggtitle(paste0("QCR-Benchmark signal mean correlation vs Benchmark window"))
 
 @
 
@@ -251,7 +264,8 @@ gg_cv<- cv %>%
 \item We use a momentum strategy with the trend signal applied to pairs derived from the g3 universe subset
 \item We use a reversion strategy with the trend signal applied to pairs derived from the g10xg3 universe subset
 \item We select a window size that maximizes correlation between proxy signals and actual signals
-\item Achieved correlations are very high. We believe this suggests that our benchmark captures a large part of 
+\item Achieved correlation of daily returns is high: \Sexpr{round(100*cor(qcr_strat,qcrb_strat),digits=1)}. 
+We believe this suggests that our benchmark captures a large part of 
 actual signal behaviour
 \item We can now use our proxy to understand the parameter space of the price momentum and price reversion signals
 \end{enumerate}
