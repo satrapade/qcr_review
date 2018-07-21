@@ -40,6 +40,8 @@ require(DBI)
 require(readxl)
 require(Rtsne)
 require(knitr)
+require(stringi)
+require(RcppRoll)
 
 @
 
@@ -120,9 +122,10 @@ Risk factors associated to risk premia and asset classes in {\bf ANG}, 2014 \\
 
 
 
-\noindent Some of these risk factors do not behave as one would expect them to behave, these are usually called  , ``time-series momentum'' is considered to be a ``market anomaly'', 
-not a ``risk-premium'' \footnote{For example see the introduction in Tobias J. Moskowitz, Yao Hua Ooi, Lasse Heje Pedersen. 
-Time series momentum. Journal of Financial Economics 104(2012) 228-250}.
+\noindent Some of these risk factors do not behave as one would expect them to behave, these are usually called  , 
+``time-series momentum'' is considered to be a ``market anomaly'', not a ``risk-premium'' \footnote{For example see the 
+introduction in Tobias J. Moskowitz, Yao Hua Ooi, Lasse Heje Pedersen. Time series momentum. Journal of Financial Economics 
+104(2012) 228-250}.
 
 \vskip 5mm
 
@@ -140,11 +143,89 @@ that one should make an effort to align terminology to general useage.
 \href{https://s3.amazonaws.com/papers-documentation/Books+-+Market+Factors/(Financial+Management+Association+Survey+and+Synthesis+Series)+Andrew+Ang-Asset+Management_+A+Systematic+Approach+to+Factor+Investing-Oxford+University+Press+(2014)+(1).pdf}{\bf 
 Ang, Andrew. A systematic Approach to Factor Investing. Oxford University Press 2014}
 
-\noindent Furthermore, the signals are 
+\newpage
+\subsection{Performance backtests}
+<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+
+sharpe<-function(strat)sqrt(356)*mean(strat)/sd(strat)
+
+# make matrix of signals: sign of rolling total returns
+tret2sig <- function(x,w=91){
+  tret<-structure(apply(x,2,function(p)c(rep(0,w-1),roll_sum(p,n=w))),dimnames=dimnames(x))
+  sign(tret)
+}
+g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
+
+g3regexp<-head(g10,3) %>% 
+  {paste0(.,collapse="|")} %>%
+  {paste0("^(",.,")(",.,")$")}
+
+qcr_tr<-fread("currency_total_returns.csv") %>% 
+{as.matrix(.[,2:(ncol(.)-1)],rownames=.$V1)}
+
+qcr_msig<-fread("momentum_signal.csv") %>% 
+{as.matrix(.[,2:(ncol(.)-1)],rownames=stri_sub(.$V1,1,10))} %>%
+{head(.,-1)[,colnames(qcr_tr)]}
+
+
+qcr<-head(qcr_msig,-1)*tail(qcr_tr,-1) %>% 
+  {setNames(.,head(rownames(qcr_tr),-1))}
+
+tor<-grepl(g3regexp,colnames(qcr_tr))
+qcr_strat<-rowMeans(qcr[,tor])-rowMeans(qcr[,!tor])
+
+cv<-seq(from=40,to=365,length.out = 25) %>%
+{ data.table(
+    w=.,
+    cor=mapply(function(w){
+      pp<-head(tret2sig(qcr_tr,w),-1)*tail(qcr_tr,-1)
+      cor(rowMeans(pp[,tor])-rowMeans(pp[,!tor]),qcr_strat)
+    },.)
+) }
+
+qcrb<-head(tret2sig(qcr_tr,cv[which.max(cor),w]),-1)*tail(qcr_tr,-1)
+
+
+qcrb_strat<-rowMeans(qcrb[,tor])-rowMeans(qcrb[,!tor])
+
+gg_qcr<-data.table(
+  date=as.Date(rownames(qcr),format="%Y-%m-%d"),
+  qcr=c(cumsum(qcr_strat)),
+  qcrb=c(cumsum(qcrb_strat*sd(qcr_strat)/sd(qcrb_strat)))
+) %>% 
+  melt(id.vars=c("date"),measure.vars=c("qcr","qcrb"),variable.name="strat") %>%
+  ggplot()+
+  geom_line(aes(x=date,y=value,col=strat)) +
+  ggtitle(paste0("QCR performance"))
+
+gg_cv<- ggplot(cv) + geom_line(aes(x=w,y=100*cor)) +
+  ggtitle(paste0("QCR-Benchmark correlation vs Benchmark window"))
+
+@
+
+\begin{center}
+\begin{tabular}{m{10cm} m{10cm}}
+\Sexpr{make_plot(
+  plot(gg_qcr),
+  width="10cm",
+  height="10cm",
+  envir=environment()
+)}
+&
+\Sexpr{make_plot(
+  plot(gg_cv),
+  width="10cm",
+  height="10cm",
+  envir=environment()
+)}
+\\
+\end{tabular}
+\end{center}
 
 \newpage
 \subsection{``Diminishing returns to diversification''}
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+
 tri<-function(n,d=1,s=1)(s*row(diag(n))<s*col(diag(n)))+d*diag(n)
 
 tret_rv<- 50 %>% # random returns, random vol for testing
@@ -429,14 +510,6 @@ total returns for trend). These would be quite informative.
 # simple backtest 
 #
 
-require(data.table)
-require(stringi)
-require(magrittr)
-require(RcppRoll)
-
-# restricted universe
-g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
-
 # ccy total returns matrix
 ccy_tr <- fread("ccy_tr.csv") %>% # ccy returns
   {as.matrix(.[,-1],rownames=.$rn)} %>%
@@ -456,14 +529,6 @@ universe2matrix<- function(u,tret){
   p<-universe2pairs(u,all_ccy=colnames(tret))
   structure(tret[,stri_sub(p,1,3)]-ccy_tr[,stri_sub(p,-3,-1)],dimnames=list(rownames(tret),p))
 }
-
-# make matrix of signals: sign of rolling total returns
-tret2sig <- function(x,w=91){
-  tret<-structure(apply(x,2,function(p)c(rep(0,w-1),roll_sum(p,n=w))),dimnames=dimnames(x))
-  sign(tret)
-}
-
-sharpe<-function(strat)sqrt(356)*mean(strat)/sd(strat)
 
 backtest<-function(n,u,dir=1,w=91,tret=get("ccy_tr",parent.frame())){ # name, universe, direction, window
   u_tr<-universe2matrix(u,tret=tret)
