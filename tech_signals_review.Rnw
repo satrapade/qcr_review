@@ -79,30 +79,31 @@ qcr_ccys<-c(
 
 \vskip 5mm
 
-The document begins by introducing the singals used by the proposed strategy. As per the document, these signals considered 
-to be ``robust representations of factor risk premia``. The specific mapping is not clearly and explicitly presented
-in the introduction, but it is fairly straight-forward \footnote{Ang, Andrew. A systematic Approach to Factor Investing.  
-Oxford University Press 2014}. The document states that 
-
-We were not able to decide which premium is captured by the ``yield momentum'' signal. 
-
+The document begins by introducing the singals used by the proposed strategy. As per the document, these signals are considered 
+to be ``robust representations of factor risk premia``. These risk premia are: {\bf carry}, {\bf value}, {\bf momentum} and 
+{\bf volatility}.The specific mapping is not clearly and explicitly presented in the introduction, but it is fairly 
+straight-forward \footnote{Ang, Andrew. A systematic Approach to Factor Investing. Oxford University Press 2014}, with the
+exception of ``yield momentum''.
 
 \vskip 5mm
 
 \begin{center}
-\begin{tabular}{l l l}
+\begin{tabular}{l l l l}
 \hline
-\multicolumn{3}{c}{QCR signals} \\
+\multicolumn{4}{c}{QCR signals} \\
+signal & type & risk premium & \Sexpr{tbl(c("intuitiveness/clarity","of risk premium","mapping"),align="l")} \\
 \hline
-signal & type & risk premium \\
-price momentum & technical & momentum \\
-price reversion & technical & volatility \\
-yield momentum &  fundamental & {\bf no risk premium presented} \\
-risk-adjusted yield & fundamental & value/carry\\
-long-term fair value & fundamental & value/carry \\
-short-term fair value & fundamental & value/carry \\
+price momentum & technical & momentum & high \\
+price reversion & technical & volatility & medium \\
+yield momentum &  fundamental & {\bf hard to tell} & low \\
+risk-adjusted yield & fundamental & carry & high \\
+long-term fair value & fundamental & value & high \\
+short-term fair value & fundamental & value & low \\
 \end{tabular}
 \end{center}
+
+\vskip 5mm
+
 
 
 \vskip 5mm
@@ -111,7 +112,7 @@ short-term fair value & fundamental & value/carry \\
 \begin{tabular}{c}
 \hline
 \rowcolor{gray!20}
-Risk factors associated to risk premia and asset classes in {\bf ANG}, 2014 \\
+Risk factors associated to risk premia and asset classes in ANG, 2014 \\
 \Sexpr{web_png(
   "https://user-images.githubusercontent.com/1358190/42994323-b1dd6fe4-8c05-11e8-92e6-1c64972ed88c.png",
   height="10cm",
@@ -120,31 +121,44 @@ Risk factors associated to risk premia and asset classes in {\bf ANG}, 2014 \\
 \end{tabular}
 \end{center}
 
-
-
-\noindent Some of these risk factors do not behave as one would expect them to behave, these are usually called  , 
-``time-series momentum'' is considered to be a ``market anomaly'', not a ``risk-premium'' \footnote{For example see the 
-introduction in Tobias J. Moskowitz, Yao Hua Ooi, Lasse Heje Pedersen. Time series momentum. Journal of Financial Economics 
-104(2012) 228-250}.
-
 \vskip 5mm
 
-Anomalies, in addition to momentum, include the various calendar effects in equities  and fairly large list of other 
-``price patterns'', not all of which are exploitable. Price momentum is the most important entry in the list of
-anomalies. The two concepts are not orthogonal, but they are sufficiently different in the minds of most informed investors
-that one should make an effort to align terminology to general useage. 
+\noindent Some of the risk factors do not behave as one would expect them to behave. Risk premia would be expected to 
+rise during market-wide risk-off periods, even if they are uncorrelated during other periods. These ``unusual'' risk factors
+are sometimes called ``market anomalies'' as opposed to  ``risk-premia'' \footnote{For example see the introduction in Tobias 
+J. Moskowitz, Yao Hua Ooi, Lasse Heje Pedersen. Time series momentum. Journal of Financial Economics 104(2012) 228-250}. It is
+worth noting that there are many more ``anomalies'' than there are pure ``risk premia''.
 
 \vskip 5mm
-
-\noindent It might be helpful to exactly spell out what the specific risk-premia are that we aim to capture. 
-
-\vskip 5mm
-
-\href{https://s3.amazonaws.com/papers-documentation/Books+-+Market+Factors/(Financial+Management+Association+Survey+and+Synthesis+Series)+Andrew+Ang-Asset+Management_+A+Systematic+Approach+to+Factor+Investing-Oxford+University+Press+(2014)+(1).pdf}{\bf 
-Ang, Andrew. A systematic Approach to Factor Investing. Oxford University Press 2014}
+\begin{itemize}
+\item \href{https://s3.amazonaws.com/papers-documentation/Books+-+Market+Factors/(Financial+Management+Association+Survey+and+Synthesis+Series)+Andrew+Ang-Asset+Management_+A+Systematic+Approach+to+Factor+Investing-Oxford+University+Press+(2014)+(1).pdf}{Ang, Andrew. A systematic Approach to Factor 
+Investing. Oxford University Press 2014}
+\end{itemize}
 
 \newpage
-\subsection{Performance backtests}
+\subsection{Technical signals: price momentum, price reversion}
+
+\vskip 5mm
+
+Summary of technical signal investigation:
+
+\vskip 5mm
+
+\begin{enumerate}
+\item Although momentum and reversion are assigned to different risk factors, their implementation is identical, up to a sign. 
+\item Both price and momentum reversion rely on a trend signal, but they trade ``opposite'' positions. 
+\item Price reversion sells the asset after positive performance and buys after negative performannce. 
+\item Price momentum buys after gains and sells after losses.
+\item We verify that these signals are derived from a longitudinal, time-series trend indicator.
+\item We examine the parameter space and asses potential for over-fitting inherent in parameter choices made.
+\item A trend strategy has 2 important parameters: The {\bf investment universe} and the {\bf trend estimation window}.
+\item To evaluate how the signal behaves over its parameters space, we need to run the strategy multiple times, with different parameters.
+\item We use a very, very simple trend model as a proxy for the ``real'' strategy. The fit is suprisingly good, we expect conclusions
+relating to this proxy to carry over well to the actual model.
+\end{enumerate}
+
+
+\subsubsection{Actual QCR price momentum signal vs proxy price momentum signal}
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
 
 sharpe<-function(strat)sqrt(356)*mean(strat)/sd(strat)
@@ -162,6 +176,8 @@ g3regexp<-head(g10,3) %>%
 
 qcr_tr<-fread("currency_total_returns.csv") %>% 
 {as.matrix(.[,2:(ncol(.)-1)],rownames=.$V1)}
+qcr_sd<-apply(qcr_tr,2,sd)
+qcr_rp<-qcr_tr%*%diag(0.05/qcr_sd)
 
 qcr_msig<-fread("momentum_signal.csv") %>% 
 {as.matrix(.[,2:(ncol(.)-1)],rownames=stri_sub(.$V1,1,10))} %>%
@@ -172,21 +188,43 @@ qcr<-head(qcr_msig,-1)*tail(qcr_tr,-1) %>%
   {setNames(.,head(rownames(qcr_tr),-1))}
 
 tor<-grepl(g3regexp,colnames(qcr_tr))
-qcr_strat<-rowMeans(qcr[,tor])-rowMeans(qcr[,!tor])
+qcr_strat_long<-rowMeans(qcr[,tor])
+qcr_strat_short<-rowMeans(qcr[,!tor])
+qcr_strat<-qcr_strat_long-qcr_strat_short
 
-cv<-seq(from=40,to=365,length.out = 25) %>%
-{ data.table(
-    w=.,
-    cor=mapply(function(w){
-      pp<-head(tret2sig(qcr_tr,w),-1)*tail(qcr_tr,-1)
-      cor(rowMeans(pp[,tor])-rowMeans(pp[,!tor]),qcr_strat)
-    },.)
-) }
+ws<-seq(from=10,to=365,length.out = 25)
 
-qcrb<-head(tret2sig(qcr_tr,cv[which.max(cor),w]),-1)*tail(qcr_tr,-1)
+cv<-local({ 
+  strat<-cbind(s_long=qcr_strat_long,s_short=qcr_strat_short)
+  cf<-function(w){
+    cm<-cor(qcr_msig,tret2sig(qcr_rp,w))
+    setNames(diag(cm),colnames(qcr_tr))
+  }
+  cor_traj<-t(mapply(cf,ws))
+  data.table(w=ws,cor_traj) 
+})  %>%
+  {melt(.,id.vars="w",measure.vars=tail(names(.),-1))} %>%
+  {.$subset<-ifelse(grepl(g3regexp,.$variable),"g3","g10xg3"); .}
+
+wstats<-cv[,
+  .(
+    g3_mean_cor=mean(value[subset=="g3"]),
+    g3_min_cor=min(value[subset=="g3"]),
+    g3_max_cor=max(value[subset=="g3"]),
+    g10xg3_mean_cor=mean(value[subset=="g10xg3"]),
+    g10xg3_min_cor=min(value[subset=="g10xg3"]),
+    g10xg3_max_cor=max(value[subset=="g10xg3"])
+
+  ),
+  keyby=w
+]
 
 
-qcrb_strat<-rowMeans(qcrb[,tor])-rowMeans(qcrb[,!tor])
+# use window size that maximizes correlation
+qcrb_long<-head(tret2sig(qcr_rp,wstats[which.max(g3_mean_cor),w]),-1)*tail(qcr_rp,-1)
+qcrb_short<-head(tret2sig(qcr_rp,wstats[which.max(g10xg3_mean_cor),w]),-1)*tail(qcr_rp,-1)
+
+qcrb_strat<-rowMeans(qcrb_long[,tor])-rowMeans(qcrb_short[,!tor])
 
 gg_qcr<-data.table(
   date=as.Date(rownames(qcr),format="%Y-%m-%d"),
@@ -196,15 +234,36 @@ gg_qcr<-data.table(
   melt(id.vars=c("date"),measure.vars=c("qcr","qcrb"),variable.name="strat") %>%
   ggplot()+
   geom_line(aes(x=date,y=value,col=strat)) +
-  ggtitle(paste0("QCR performance"))
+  ggtitle(paste0("QCR Momentum+Reversion, Procy Momentum+Reversion performance"))
 
-gg_cv<- ggplot(cv) + geom_line(aes(x=w,y=100*cor)) +
-  ggtitle(paste0("QCR-Benchmark correlation vs Benchmark window"))
+gg_cv<- cv %>%
+  ggplot() + 
+  geom_line(aes(x=w,y=100*value,col=subset,group=variable),size=2,alpha=0.66) +
+  ggtitle(paste0("QCR-Benchmark correlation vs Benchmark window plots."))
 
 @
 
+\vskip 5mm
+
+\begin{enumerate}
+\item We use the simplest possible trend signal: sign of rolling total returns.
+\item As per the document, our universe is all currency pairs derived from the g10 set of currencies.
+\item We use a momentum strategy with the trend signal applied to pairs derived from the g3 universe subset
+\item We use a reversion strategy with the trend signal applied to pairs derived from the g10xg3 universe subset
+\item We select a window size that maximizes correlation between proxy signals and actual signals
+\item Achieved correlations are very high. We believe this suggests that our benchmark captures a large part of 
+actual signal behaviour
+\item We can now use our proxy to understand the parameter space of the price momentum and price reversion signals
+\end{enumerate}
+
+
+
 \begin{center}
 \begin{tabular}{m{10cm} m{10cm}}
+\multicolumn{1}{c}{Actual vs proxy performance} 
+& 
+\multicolumn{1}{c}{Actual vs proxy correlations} 
+\\
 \Sexpr{make_plot(
   plot(gg_qcr),
   width="10cm",
