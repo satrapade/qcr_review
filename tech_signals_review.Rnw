@@ -164,16 +164,18 @@ relating to this proxy to carry over well to the actual model.
 sharpe<-function(strat)sqrt(356)*mean(strat)/sd(strat)
 
 # make matrix of signals: sign of rolling total returns
-tret2sig <- function(x,w=91){
-  tret<-structure(apply(x,2,function(p)c(rep(0,w-1),roll_sum(p,n=w))),dimnames=dimnames(x))
+tret2sig <- function(x,w=91,thresh=0.05){
+  #tret<-structure(apply(x,2,function(p)c(rep(0,w-1),roll_sum(p,n=w))),dimnames=dimnames(x))
   rng<-structure(apply(x,2,function(p){
     px<-cumsum(p)
+    pxstart<-head(px,-(w-1))
+    pxend<-tail(px,-(w-1))
     pxmax<-roll_max(px,n=w)
     pxmin<-roll_min(px,n=w)
-    rng<-2*((tail(px,-(w-1))-pxmin)/(pxmax-pxmin)-0.5)
+    rng<-2*((pxend-pxmin)/(pxmax-pxmin)-0.5)
     c(rep(0,w-1),rng)
   }),dimnames=dimnames(x))
-  rng*(abs(rng)>0.25)
+  rng*(abs(rng)>thresh)
 }
 g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
 
@@ -199,12 +201,12 @@ qcr_strat_long<-rowMeans(qcr[,tor])
 qcr_strat_short<-rowMeans(qcr[,!tor])
 qcr_strat<-qcr_strat_long-qcr_strat_short
 
-ws<-seq(from=10,to=365,length.out = 25)
+ws<-as.integer(seq(from=10,to=365,length.out = 25))
 
 cv<-local({ 
   strat<-cbind(s_long=qcr_strat_long,s_short=qcr_strat_short)
   cf<-function(w){
-    cm<-cor(qcr_msig,tret2sig(qcr_rp,w))
+    cm<-cor(qcr_msig,tret2sig(qcr_rp,w,thresh=0.05))
     setNames(diag(cm),colnames(qcr_tr))
   }
   cor_traj<-t(mapply(cf,ws))
@@ -259,7 +261,8 @@ gg_cv1<- wstats[,.(w,g3_mean_cor,g10xg3_mean_cor)] %>%
 \vskip 5mm
 
 \begin{enumerate}
-\item We use the simplest possible trend signal: sign of rolling total returns.
+\item After some investigation we identified a simple signal matching observed signal values: location in
+rolling price range. This signal appears to be a better match than simple total returns, so we used it.
 \item As per the document, our universe is all currency pairs derived from the g10 set of currencies.
 \item We use a momentum strategy with the trend signal applied to pairs derived from the g3 universe subset
 \item We use a reversion strategy with the trend signal applied to pairs derived from the g10xg3 universe subset
