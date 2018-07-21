@@ -129,11 +129,6 @@ are sometimes called ``market anomalies'' as opposed to  ``risk-premia'' \footno
 J. Moskowitz, Yao Hua Ooi, Lasse Heje Pedersen. Time series momentum. Journal of Financial Economics 104(2012) 228-250}. It is
 worth noting that there are many more ``anomalies'' than there are pure ``risk premia''.
 
-\vskip 5mm
-\begin{itemize}
-\item \href{https://s3.amazonaws.com/papers-documentation/Books+-+Market+Factors/(Financial+Management+Association+Survey+and+Synthesis+Series)+Andrew+Ang-Asset+Management_+A+Systematic+Approach+to+Factor+Investing-Oxford+University+Press+(2014)+(1).pdf}{Ang, Andrew. A systematic Approach to Factor 
-Investing. Oxford University Press 2014}
-\end{itemize}
 
 \newpage
 \subsection{Technical signals: price momentum, price reversion}
@@ -411,6 +406,12 @@ uncorrelated sources of return.
 
 \vskip 5mm
 
+What we actually see is that growing the universe beyond g3 is systematically harmful
+rather than diminishingly beneficial. This effect appears to persist over sub-periods
+of the dataset. 
+
+\vskip 5mm
+
 \begin{center}
 \begin{tabular}{ m{10cm} m{10cm}}
 \Sexpr{make_plot(
@@ -431,15 +432,15 @@ uncorrelated sources of return.
 \end{center}
 
 \begin{itemize}
-\item adding further currency offers no diversification benefit
-\item instead, additional currencies sytematically reduce performance
-\item this is not one would expect if the trend signal worked across the universe
-\item it seems that the price momentum signal is limited to the g3 subsets because this is the subset
-on which the signal performs best
-\item It is therefore important to justify the reasons for limiting the price momentum signal to the 
-g3 subset
-\item However, the subset sellection appears to be capturing some property of the time-series. g3
-appears to work consistently over quite a long period
+\item adding further currencies beyond g3 offers no diversification benefit
+\item instead, additional currencies systematically reduce performance
+\item this is not what one would expect if the trend signal worked across the universe
+\item it seems that the price momentum signal is only applied to the g3 subset because this is the subset
+on which the signal performs best. 
+\item the split in major and minor currencies represents a specific market view
+\item the effect appears to persist,the g3 vs g10xg3 split could be capturing a 
+real feature of the FX market.
+\item this should be well documented
 \end{itemize}
 
 
@@ -783,6 +784,22 @@ gg_10subset <- results2df(batch_trend_10subsets_result) %>%
 \\
 \end{tabular}
 \end{center}
+
+\newpage
+\subsubsection{Conclusions }
+
+\vskip 5mm
+
+\begin{itemize}
+\item Backtest results suggest that the technical signals capture a persistent source of alpha
+\item Returns are not due to risk premium collected through exposure to risk factors.
+\item Pure risk factor exposure does not appear to be profitable in the selected universe
+\item Almost all returns are coming from a specific view on structural differences in parts
+of the FX market
+\item The excess return due to this view is makes this strategy more valuable than a simple 
+beta product. On the other hand, it might prevent marketing it as such
+
+\end{itemize}
 
 
 \newpage
