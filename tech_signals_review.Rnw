@@ -140,9 +140,8 @@ Summary of items:
 \vskip 5mm
 
 \begin{enumerate}
-\item Analysis of the indicator used by the reversion and the momentum strategies. These appear to be driven by 
-the same indicator
-\item Review of proposed currency split and arguments motivating presented choises
+\item Analysis of the indicator used by the reversion and the momentum strategies
+\item Review of proposed currency split and arguments motivating the choices
 \item Backtest results relating to currency splits
 \item Selected parameters, parameter sensitivity
 \end{enumerate}
@@ -154,36 +153,34 @@ the same indicator
 sharpe<-function(strat)sqrt(356)*mean(strat)/sd(strat)
 
 # make matrix of signals: sign of rolling total returns
-tret2sig <- function(x,w=91,thresh=0.05){
-  #tret<-structure(apply(x,2,function(p)c(rep(0,w-1),roll_sum(p,n=w))),dimnames=dimnames(x))
-  rng<-structure(apply(x,2,function(p){
-    px<-cumsum(p)
-    pxstart<-head(px,-(w-1))
-    pxend<-tail(px,-(w-1))
-    pxmax<-roll_max(px,n=w)
-    pxmin<-roll_min(px,n=w)
-    rng<-2*((pxend-pxmin)/(pxmax-pxmin)-0.5)
-    c(rep(0,w-1),rng)
-  }),dimnames=dimnames(x))
-  rng*(abs(rng)>thresh)
+tret2sig <- function(x,w=91,thresh=0.05,type="rangeloc"){
+  if(type=="sign"){
+    tret<-apply(x,2,function(p)c(rep(0,w-1),roll_sum(p,n=w)))
+    attributes(tret)$dimnames<-dimnames(x)
+    return(sign(tret))
+  }
+  if(type=="rangeloc"){
+    rng<-structure(apply(x,2,function(p){
+      px<-cumsum(p)
+      pxstart<-head(px,-(w-1))
+      pxend<-tail(px,-(w-1))
+      pxmax<-roll_max(px,n=w)
+      pxmin<-roll_min(px,n=w)
+      rng<-2*((pxend-pxmin)/(pxmax-pxmin)-0.5)
+      c(rep(0,w-1),rng)
+    }),dimnames=dimnames(x))
+    return(rng*(abs(rng)>thresh))
+  }
 }
+
 g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
 
-g3regexp<-head(g10,3) %>% 
+ccy2pair <- . %>% 
+  head(g10,.) %>% 
   {paste0(.,collapse="|")} %>%
   {paste0("^(",.,")(",.,")$")}
 
-g4regexp<-head(g10,4) %>% 
-  {paste0(.,collapse="|")} %>%
-  {paste0("^(",.,")(",.,")$")}
-
-g5regexp<-head(g10,5) %>% 
-  {paste0(.,collapse="|")} %>%
-  {paste0("^(",.,")(",.,")$")}
-
-g6regexp<-head(g10,6) %>% 
-  {paste0(.,collapse="|")} %>%
-  {paste0("^(",.,")(",.,")$")}
+g3regexp<- ccy2pair(3) 
 
 qcr_tr<-fread("currency_total_returns.csv") %>% 
 {as.matrix(.[,2:(ncol(.)-1)],rownames=.$V1)}
@@ -193,7 +190,6 @@ qcr_rp<-qcr_tr%*%diag(0.05/qcr_sd)
 qcr_msig<-fread("momentum_signal.csv") %>% 
 {as.matrix(.[,2:(ncol(.)-1)],rownames=stri_sub(.$V1,1,10))} %>%
 {head(.,-1)[,colnames(qcr_tr)]}
-
 
 qcr<-head(qcr_msig,-1)*tail(qcr_tr,-1) %>% 
   {setNames(.,head(rownames(qcr_tr),-1))}
@@ -357,10 +353,6 @@ making them more likely to experience large cumulative deviations from exchange 
 \end{description}
 
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
-ccy2pair <- . %>% 
-  head(g10,.) %>% 
-  {paste0(.,collapse="|")} %>%
-  {paste0("^(",.,")(",.,")$")}
 
 sig_ptf<-mapply(
   grepl,
@@ -468,15 +460,23 @@ universe2matrix<- function(u,tret){
   structure(tret[,stri_sub(p,1,3)]-ccy_tr[,stri_sub(p,-3,-1)],dimnames=list(rownames(tret),p))
 }
 
-backtest<-function(n,u,dir=1,w=91,tret=get("ccy_tr",parent.frame())){ # name, universe, direction, window
-  u_tr<-universe2matrix(u,tret=tret)
-  u_sig<-tret2sig(u_tr,w=w)*dir
+backtest<-function(
+  n,
+  u,
+  dir=1,
+  w=91,
+  sig_type="rangeloc",
+  tret=get("ccy_tr",parent.frame())
+){ # name, universe, direction, window
+  u_tr<-universe2matrix(u=u,tret=tret)
+  u_sig<-tret2sig(u_tr,w=as.integer(w),type=sig_type)*dir
   u_perf<-head(u_sig,-1)*tail(u_tr,-1)
   strat<-rowMeans(u_perf)
   data.table(
     name=n,
     type=ifelse(dir>0,"trend","reversion"),
-    window=w,
+    sig_type=sig_type,
+    window=as.integer(w),
     universe=list(u),
     pairs=list(colnames(u_tr)),
     pair_perf=list(u_perf),
@@ -488,7 +488,15 @@ backtest<-function(n,u,dir=1,w=91,tret=get("ccy_tr",parent.frame())){ # name, un
   )
 }
 
-backtest_subset<-function(n,u,dir,w,tret,source_backtest){
+backtest_subset<-function(
+  n,
+  u,
+  dir,
+  w,
+  sig_type,
+  tret,
+  source_backtest
+){
   force(tret)
   force(w)
   u_pairs<-universe2pairs(u)
@@ -497,6 +505,7 @@ backtest_subset<-function(n,u,dir,w,tret,source_backtest){
   data.table(
     name=n,
     type=ifelse(dir>0,"trend","reversion"),
+    sig_type=source_backtest$sig_type[[1]],
     window=source_backtest$w[[1]],
     universe=list(u),
     pairs=list(u_pairs),
@@ -509,7 +518,16 @@ backtest_subset<-function(n,u,dir,w,tret,source_backtest){
   )
 }
 
-backtest_subset_ls<-function(n,u,dir,w,tret,source_backtest,s=3){
+backtest_subset_ls<-function(
+  n,
+  u,
+  dir,
+  w,
+  sig_type,
+  tret,
+  source_backtest,
+  s=3
+){
   force(tret)
   force(w)
   u_pairs_long<-universe2pairs(head(u,s))
@@ -520,6 +538,7 @@ backtest_subset_ls<-function(n,u,dir,w,tret,source_backtest,s=3){
   data.table(
     name=n,
     type=ifelse(dir>0,"trend","reversion"),
+    sig_type=source_backtest$sig_type[[1]],
     window=source_backtest$w[[1]],
     universe=list(u),
     pairs=list(c(u_pairs_long,u_pairs_short)),
@@ -545,6 +564,10 @@ results2df<-function(x)data.table( # formatted results summary
     strat=structure(
       x$type,
       hdr=tbl(c("Strategy","type"),align="@{}l")
+    ),
+    signal=structure(
+      x$sig_type,
+      hdr=tbl(c("Signal","type"),align="@{}l")
     ),
     window=structure(
       x$window,
@@ -586,11 +609,16 @@ results2df<-function(x)data.table( # formatted results summary
     )
   )
 
-results2plot<-function(x)data.table( # results performance plot
-  group=rep(x$name,times=mapply(length,x$strat)),
-  perf=do.call(c,mapply(cumsum,x$strat,SIMPLIFY=FALSE)),
-  date=as.Date(do.call(c,mapply(rownames,x$pair_perf,SIMPLIFY=FALSE)),format="%Y-%m-%d")
-)
+results2plot<-function(x){
+  data.table( # results performance plot
+    name=rep(x$name,times=mapply(length,x$strat)),
+    type=rep(x$sig_type,times=mapply(length,x$strat)),
+    sig_type=rep(x$sig_type,times=mapply(length,x$strat)),
+    w=rep(x$w,times=mapply(length,x$strat)),
+    perf=do.call(c,mapply(cumsum,x$strat,SIMPLIFY=FALSE)),
+    date=as.Date(do.call(c,mapply(rownames,x$pair_perf,SIMPLIFY=FALSE)),format="%Y-%m-%d")
+  )
+}
 
 
 subsets<-list(g10=g10,g3=head(g10,3),g10xg3=tail(g10,-3),U=colnames(ccy_tr),W=setdiff(colnames(ccy_tr),g10))
@@ -600,7 +628,16 @@ random_10subsets<-mapply(function(i)sample(colnames(ccy_tr),10),paste0("sample",
 
 batch<-data.table(expand.grid(
     n=names(subsets),
-    dir=c(-1,1),
+    dir=c(1),
+    sig_type="rangeloc",
+    w=c(91),
+    stringsAsFactors = FALSE
+)) %>% {.$u<-subsets[.$n];.}
+
+batch_sign<-data.table(expand.grid(
+    n=names(subsets),
+    dir=c(1),
+    sig_type="sign",
     w=c(91),
     stringsAsFactors = FALSE
 )) %>% {.$u<-subsets[.$n];.}
@@ -608,6 +645,7 @@ batch<-data.table(expand.grid(
 batch_trend_window<-data.table(expand.grid(
     n=c("g3","g10xg3"),
     dir=c(1),
+    sig_type="rangeloc",
     w=as.integer(seq(from=10,to=360,length.out=50)),
     stringsAsFactors = FALSE
 )) %>% {.$u<-subsets[.$n];.}
@@ -615,6 +653,7 @@ batch_trend_window<-data.table(expand.grid(
 batch_trend_3subsets<-data.table(expand.grid(
     n=names(random_3subsets),
     dir=c(1),
+    sig_type="rangeloc",
     w=91,
     stringsAsFactors = FALSE
 )) %>% {.$u<-random_3subsets[.$n];.}
@@ -622,6 +661,7 @@ batch_trend_3subsets<-data.table(expand.grid(
 batch_trend_7subsets<-data.table(expand.grid(
     n=names(random_7subsets),
     dir=c(1),
+    sig_type="rangeloc",
     w=91,
     stringsAsFactors = FALSE
 )) %>% {.$u<-random_7subsets[.$n];.}
@@ -629,15 +669,18 @@ batch_trend_7subsets<-data.table(expand.grid(
 batch_trend_10subsets<-data.table(expand.grid(
     n=names(random_10subsets),
     dir=c(1),
+    sig_type="rangeloc",
     w=91,
     stringsAsFactors = FALSE
 )) %>% {.$u<-random_10subsets[.$n];.}
 
 
 batch_result<-do.call(rbind,do.call(mapply,c(backtest,batch,SIMPLIFY=FALSE)))
+batch_sign_result<-do.call(rbind,do.call(mapply,c(backtest,batch_sign,SIMPLIFY=FALSE)))
+
 batch_trend_window_result<-do.call(rbind,do.call(mapply,c(backtest,batch_trend_window,SIMPLIFY=FALSE)))
 
-batch_all_91trend_result<-backtest("U",colnames(ccy_tr),dir=1,w=91,tret=ccy_tr)
+batch_all_91trend_result<-backtest("U",colnames(ccy_tr),dir=1,w=91,sig_type="rangeloc",tret=ccy_tr)
 
 batch_trend_3subsets_result<-c(
   list(FUN=backtest_subset),
@@ -666,16 +709,21 @@ batch_trend_10subsets_result<-c(
 {do.call(mapply,.)} %>%
 {do.call(rbind,.)}
 
-gg_trend<-results2plot(batch_result[type=="trend" & window==91 & name %in% c("g10","g3","g10xg3")]) %>% 
+gg_trend<-results2plot(rbind(
+  batch_result[name %in% c("g10","g3","g10xg3")],
+  batch_sign_result[name %in% c("g10","g3","g10xg3")]
+)) %>% 
   ggplot() +
-  geom_line(aes(x=date,y=perf*100,col=group,group=group)) +
+  geom_line(
+    aes(
+      x=date,
+      y=perf*100,
+      col=name,
+      linetype=sig_type,
+      group=interaction(name,type,sig_type,w)
+    )
+  ) +
   ggtitle(paste0("91-day Trend"))
-
-gg_rev<-results2plot(batch_result[type=="reversion" & window==91]) %>% 
-  ggplot() +
-  geom_line(aes(x=date,y=perf*100,col=group,group=group))+
-  ggtitle(paste0("45-day Reversion"))
-
 
 
 
@@ -699,7 +747,10 @@ parameter selection is compared others.
 
 \begin{center}
 \Sexpr{ntable(
-  df=results2df(batch_result)[strat=="trend"],
+  df=results2df(rbind(
+    batch_result,
+    batch_sign_result
+  )),
   scale="0.75",
   title="backtest result summary"
 )}
@@ -719,13 +770,23 @@ gg_3subset <- results2df(batch_trend_3subsets_result) %>%
   ggplot(aes(x=sharpe)) +
   geom_histogram(bins=50)+
   ggtitle(paste0("Sharpe vs 3-currency subset selection"))+
-  geom_vline(xintercept = results2df(batch_result)[strat=="trend" & name=="g3",sharpe],color=rgb(1,0,0),alpha=0.5,size=2)
+  geom_vline(
+    xintercept = results2df(batch_result)[strat=="trend" & name=="g3",sharpe],
+    color=rgb(1,0,0),
+    alpha=0.5,
+    size=2
+  )
 
 gg_7subset <- results2df(batch_trend_7subsets_result) %>%
   ggplot(aes(x=sharpe)) +
   geom_histogram(bins=50)+
   ggtitle(paste0("Sharpe vs 7-currency subset selection"))+
-  geom_vline(xintercept = results2df(batch_result)[strat=="trend" & name=="g10xg3",sharpe],color=rgb(1,0,0),alpha=0.5,size=2)
+  geom_vline(
+    xintercept = results2df(batch_result)[strat=="trend" & name=="g10xg3",sharpe],
+    color=rgb(1,0,0),
+    alpha=0.5,
+    size=2
+  )
 
 strat_long<-batch_result[type=="trend" & name=="g3",strat][[1]]
 strat_short<-batch_result[type=="trend" & name=="g10xg3",strat][[1]]
@@ -787,19 +848,27 @@ gg_10subset <- results2df(batch_trend_10subsets_result) %>%
 
 \vskip 5mm
 
-\begin{itemize}
-\item Backtest results suggest that the technical signals capture a persistent source of alpha
-\item Returns are not due to risk premium collected through exposure to risk factors.
-\item Pure risk factor exposure does not appear to be profitable in the selected universe
-\item Almost all returns are coming from two specific views relating to features of the FX market
-\item Firstly, that the g3 subset trends while the g10xg3 subset mean-reverts.
-\item Secondly, that price reversions are faster and require a shorter signal window than
-momentum strategies
-\item These views have worked and this excess performance makes the strategy more attractice 
-than a simple beta product. On the other hand, this same reason might prevent marketing
-the strategy as being purely driven by risk premia
+\begin{description}
+\item[it makes money!]Backtest results suggest that the technical signals capture a persistent source of alpha 
+\item[but not from risk premia?!?] Returns are not due to risk premium collected through exposure to 
+technical risk factors 
+\item[not for lack of trying!] Pure technical risk factor exposure does not appear to be profitable 
+in the selected universe
+\item[specific views] Almost all returns are coming from two specific views relating to features of 
+the FX market
+\item[major/minor] Firstly, that the g3 subset trends while the g10xg3 subset mean-reverts.
+\item[short term/long term] Secondly, that price reversions are faster and require a shorter signal 
+window than momentum strategies
+\item[past performance, future returns?] These views have worked and this excess performance makes 
+the strategy more attractive than a simple beta product. On the other hand, this same reason might 
+prevent marketing the strategy as being purely driven by risk premia
+\end{description}
 
-\end{itemize}
+\newpage
+\subsection{Interest-rate based signals }
+
+\newpage
+\subsection{Valuation-based based signals }
 
 
 \newpage
