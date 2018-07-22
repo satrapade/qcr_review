@@ -75,15 +75,16 @@ qcr_ccys<-c(
 \newpage
 \section{``Review of Technical Signals'' document}
 
-\subsection{The signals}
+\subsection{Signals, risk premia, sources of return}
 
 \vskip 5mm
 
-The document begins by introducing the singals used by the proposed strategy. As per the document, these signals are considered 
-to be ``robust representations of factor risk premia``. These risk premia are: {\bf carry}, {\bf value}, {\bf momentum} and 
-{\bf volatility}.The specific mapping is not clearly and explicitly presented in the introduction, but it is fairly 
-straight-forward \footnote{Ang, Andrew. A systematic Approach to Factor Investing. Oxford University Press 2014}, with the
-exception of ``yield momentum''.
+The document begins by introducing the singals used by the proposed strategy. As per the document, these 
+signals are considered to be ``robust representations of factor risk premia``. These risk premia are: 
+{\bf carry}, {\bf value}, {\bf momentum} and {\bf volatility}.The specific mapping is not clearly and 
+explicitly presented in the introduction, but it is fairly straight-forward \footnote{Ang, Andrew. 
+A systematic Approach to Factor Investing. Oxford University Press 2014}, with the exception of 
+``yield momentum''.
 
 \vskip 5mm
 
@@ -104,30 +105,12 @@ short-term fair value & fundamental & value & low \\
 
 \vskip 5mm
 
-
-
-\vskip 5mm
-
-\begin{center}
-\begin{tabular}{c}
-\hline
-\rowcolor{gray!20}
-Risk factors associated to risk premia and asset classes in ANG, 2014 \\
-\Sexpr{web_png(
-  "https://user-images.githubusercontent.com/1358190/42994323-b1dd6fe4-8c05-11e8-92e6-1c64972ed88c.png",
-  height="10cm",
-  width="15cm"
-)}
-\end{tabular}
-\end{center}
-
-\vskip 5mm
-
 \noindent Some of the risk factors do not behave as one would expect them to behave. Risk premia would be expected to 
-rise during market-wide risk-off periods, even if they are uncorrelated during other periods. These ``unusual'' risk factors
-are sometimes called ``market anomalies'' as opposed to  ``risk-premia'' \footnote{For example see the introduction in Tobias 
-J. Moskowitz, Yao Hua Ooi, Lasse Heje Pedersen. Time series momentum. Journal of Financial Economics 104(2012) 228-250}. It is
-worth noting that there are many more ``anomalies'' than there are pure ``risk premia''.
+rise during market-wide risk-off periods, even if they are uncorrelated during other periods. These ``unusual'' 
+risk factors are sometimes called ``market anomalies'' as opposed to  ``risk-premia'' \footnote{For example see 
+the introduction in Tobias J. Moskowitz, Yao Hua Ooi, Lasse Heje Pedersen. Time series momentum. Journal of 
+Financial Economics 104(2012) 228-250}. It is worth noting that there are many more ``anomalies'' than 
+there are pure ``risk premia''.
 
 
 \newpage
@@ -135,19 +118,19 @@ worth noting that there are many more ``anomalies'' than there are pure ``risk p
 
 \vskip 5mm
 
-Summary of items:
+Summary:
 
 \vskip 5mm
 
 \begin{enumerate}
-\item Analysis of the indicator used by the reversion and the momentum strategies
+\item Analysis of the indicator used by QCR's reversion and the momentum strategies
 \item Review of proposed currency split and arguments motivating the choices
 \item Backtest results relating to currency splits
 \item Selected parameters, parameter sensitivity
 \end{enumerate}
 
 
-\subsubsection{Actual QCR price momentum signal vs proxy price momentum signal}
+\subsubsection{QCR's price momentum signal}
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
 
 sharpe<-function(strat)sqrt(356)*mean(strat)/sd(strat)
@@ -246,7 +229,7 @@ gg_qcr<-data.table(
 gg_cv<- cv %>%
   ggplot() + 
   geom_line(aes(x=w,y=100*value,col=subset,group=variable),size=2,alpha=0.66) +
-  ggtitle(paste0("QCR-Benchmark signal correlation vs Benchmark window plots"))
+  ggtitle(paste0("QCR-Benchmark signal correlation vs Benchmark window "))
 
 gg_cv1<- wstats[,.(w,g3_mean_cor,g10xg3_mean_cor)] %>%
   {melt(.,id.vars="w",measure.vars=colnames(.)[-1])} %>%
@@ -259,18 +242,18 @@ gg_cv1<- wstats[,.(w,g3_mean_cor,g10xg3_mean_cor)] %>%
 \vskip 5mm
 
 \begin{enumerate}
-\item After some investigation we identified a simple signal matching observed signal values: location in
-rolling price range. This signal appears to be a better match than simple total returns, so we used it.
-\item As per the document, our universe is all currency pairs derived from the g10 set of currencies.
-\item We use a momentum strategy with the trend signal applied to pairs derived from the g3 universe subset
-\item We use a reversion strategy with the trend signal applied to pairs derived from the g10xg3 universe subset
-\item Remaining pairs are not used
+\item We found a simple signal matching observed signal values: ``location in rolling price range``
+\item The ``sign of rolling total returns`` signal could also be used, but ``location-in-range'' is a better fit
+\item The signal is applied some of the currency pairs derived from the g10 set of currencies.
+\item For g3 pairs, a momentum strategy with this trend signal is used
+\item For g10xg3 pairs, a reversion strategy whith this trend signal is used
+\item Remaining pairs, (cross rates between g3 and g10xg3) are excluded
 \item We select a window size that maximizes correlation between proxy signals and actual signals
-\item Achieved correlation of daily returns to the actual proposed strategy is high: {\bf 
+\item Realized return correlation between proxy and actual is high: {\bf 
 \Sexpr{round(100*cor(qcr_strat,qcrb_strat),digits=1)}}. It is very likely that actual signals
-are quite similar to the ones used by the proxy. The benchmark captures a large part of actual 
+are equivalent to the ones used by the proxy. This benchmark captures a large part of actual 
 signal behaviour, conclusions should transfer well
-\item momentum and reversion strategies use the same type of signal
+\item Do momentum and reversion strategies use the same type of signal ?
 \end{enumerate}
 
 
@@ -389,13 +372,13 @@ gg_g3_sharpe <- 1:ncol(sig_traj) %>%
 
 \vskip 5mm
 
-we apply the trend model to currency universes of increasing size. we then examine the 
+we apply the trend model to an increasing number of currencies. we then examine resulting 
 sharpe ratios. our expectation is to see an initial benefit that levels off as we exhaust
 uncorrelated sources of return.
 
 \vskip 5mm
 
-What we actually see is that growing the universe beyond g3 is systematically harmful
+what we actually see is that growing the currency universe beyond g3 is systematically harmful
 rather than diminishingly beneficial. This effect appears to persist over sub-periods
 of the dataset. 
 
@@ -555,72 +538,6 @@ backtest_subset_ls<-function(
 }
 
 
-
-results2df<-function(x)data.table( # formatted results summary
-    name=structure(
-      x$name,
-      hdr=tbl(c("Subset","name"),align="@{}l")
-    ),
-    strat=structure(
-      x$type,
-      hdr=tbl(c("Strategy","type"),align="@{}l")
-    ),
-    signal=structure(
-      x$sig_type,
-      hdr=tbl(c("Signal","type"),align="@{}l")
-    ),
-    window=structure(
-      x$window,
-      hdr=tbl(c("Window","size"),align="@{}l")
-    ),
-    pairs=structure(
-      mapply(length,x$pairs),
-      hdr=tbl(c("Pair","count"),align="@{}l")
-    ),
-    vol=structure(
-      x$vol,
-      hdr=tbl(c("Strat","vol"),align="@{}l"),
-      format=quote(n_fmt(round(this,digits=2)))
-    ),
-    perf=structure(
-      x$perf,
-      hdr=tbl(c("Strat","perf"),align="@{}l"),
-      format=quote(n_fmt(round(this,digits=2)))
-    ),
-    sharpe=structure(
-      x$sharpe,
-      hdr=tbl(c("Strat","sharpe"),align="@{}l"),
-      format=quote(n_fmt(round(this,digits=2)))
-    ),
-    min_sharpe=structure(
-      mapply(min,x$pair_sharpe),
-      hdr=tbl(c("Min","pair","sharpe"),align="@{}l"),
-      format=quote(n_fmt(round(this,digits=2)))
-    ),
-    max_sharpe=structure(
-      mapply(max,x$pair_sharpe),
-      hdr=tbl(c("Max","pair","sharpe"),align="@{}l"),
-      format=quote(n_fmt(round(this,digits=2)))
-    ),
-    mean_sharpe=structure(
-      mapply(mean,x$pair_sharpe),
-      hdr=tbl(c("Mean","pair","sharpe"),align="@{}l"),
-      format=quote(n_fmt(round(this,digits=2)))
-    )
-  )
-
-results2plot<-function(x){
-  data.table( # results performance plot
-    name=rep(x$name,times=mapply(length,x$strat)),
-    type=rep(x$sig_type,times=mapply(length,x$strat)),
-    sig_type=rep(x$sig_type,times=mapply(length,x$strat)),
-    w=rep(x$w,times=mapply(length,x$strat)),
-    perf=do.call(c,mapply(cumsum,x$strat,SIMPLIFY=FALSE)),
-    date=as.Date(do.call(c,mapply(rownames,x$pair_perf,SIMPLIFY=FALSE)),format="%Y-%m-%d")
-  )
-}
-
-
 subsets<-list(g10=g10,g3=head(g10,3),g10xg3=tail(g10,-3),U=colnames(ccy_tr),W=setdiff(colnames(ccy_tr),g10))
 random_3subsets<-mapply(function(i)sample(colnames(ccy_tr),3),paste0("sample",1:700),SIMPLIFY=FALSE)
 random_7subsets<-mapply(function(i)sample(colnames(ccy_tr),7),paste0("sample",1:700),SIMPLIFY=FALSE)
@@ -709,6 +626,88 @@ batch_trend_10subsets_result<-c(
 {do.call(mapply,.)} %>%
 {do.call(rbind,.)}
 
+
+@
+
+
+<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+
+
+results2df<-function(x)data.table( # formatted results summary
+    name=structure(
+      x$name,
+      hdr=tbl(c("Subset","name"),align="@{}l")
+    ),
+    strat=structure(
+      x$type,
+      hdr=tbl(c("Strategy","type"),align="@{}l")
+    ),
+    signal=structure(
+      x$sig_type,
+      hdr=tbl(c("Signal","type"),align="@{}l")
+    ),
+    window=structure(
+      x$window,
+      hdr=tbl(c("Window","size"),align="@{}l")
+    ),
+    pairs=structure(
+      mapply(length,x$pairs),
+      hdr=tbl(c("Pair","count"),align="@{}l")
+    ),
+    vol=structure(
+      x$vol,
+      hdr=tbl(c("Strat","vol"),align="@{}l"),
+      format=quote(n_fmt(round(this,digits=2)))
+    ),
+    perf=structure(
+      x$perf,
+      hdr=tbl(c("Strat","perf"),align="@{}l"),
+      format=quote(n_fmt(round(this,digits=2)))
+    ),
+    sharpe=structure(
+      x$sharpe,
+      hdr=tbl(c("Strat","sharpe"),align="@{}l"),
+      format=quote(n_fmt(round(this,digits=2)))
+    ),
+    min_sharpe=structure(
+      mapply(min,x$pair_sharpe),
+      hdr=tbl(c("Min","pair","sharpe"),align="@{}l"),
+      format=quote(n_fmt(round(this,digits=2)))
+    ),
+    max_sharpe=structure(
+      mapply(max,x$pair_sharpe),
+      hdr=tbl(c("Max","pair","sharpe"),align="@{}l"),
+      format=quote(n_fmt(round(this,digits=2)))
+    ),
+    mean_sharpe=structure(
+      mapply(mean,x$pair_sharpe),
+      hdr=tbl(c("Mean","pair","sharpe"),align="@{}l"),
+      format=quote(n_fmt(round(this,digits=2)))
+    )
+  )
+
+@
+
+
+<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+
+results2plot<-function(x){
+  data.table( # results performance plot
+    name=rep(x$name,times=mapply(length,x$strat)),
+    type=rep(x$sig_type,times=mapply(length,x$strat)),
+    sig_type=rep(x$sig_type,times=mapply(length,x$strat)),
+    w=rep(x$w,times=mapply(length,x$strat)),
+    perf=do.call(c,mapply(cumsum,x$strat,SIMPLIFY=FALSE)),
+    date=as.Date(do.call(c,mapply(rownames,x$pair_perf,SIMPLIFY=FALSE)),format="%Y-%m-%d")
+  )
+}
+
+
+@
+
+
+<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+
 gg_trend<-results2plot(rbind(
   batch_result[name %in% c("g10","g3","g10xg3")],
   batch_sign_result[name %in% c("g10","g3","g10xg3")]
@@ -725,12 +724,10 @@ gg_trend<-results2plot(rbind(
   ) +
   ggtitle(paste0("91-day Trend"))
 
-
-
 @
 
 We examine the relationship between window length, universe size and signal performance. The current
-parameter selection is compared others.
+parameter selection is compared with a wider range of values.
 
 \vskip 5mm
 
