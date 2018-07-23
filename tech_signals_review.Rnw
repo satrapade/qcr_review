@@ -415,9 +415,86 @@ real feature of the FX market.
 \item this should be well documented
 \end{itemize}
 
+<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
 
-\newpage
-\subsubsection{Parameter selection}
+ccy2pair <- . %>% 
+  head(g10,.) %>% 
+  {paste0(.,collapse="|")} %>%
+  {paste0("^(",.,")(",.,")$")}
+
+g3regexp<- ccy2pair(3) 
+
+# make matrix of signals: sign of rolling total returns
+tret2sig <- function(x,w=91,thresh=0.05,type="rangeloc"){
+  if(type=="sign"){
+    tret<-apply(x,2,function(p)c(rep(0,w-1),roll_sum(p,n=w)))
+    attributes(tret)$dimnames<-dimnames(x)
+    return(sign(tret))
+  }
+  if(type=="rangeloc"){
+    rng<-structure(apply(x,2,function(p){
+      px<-cumsum(p)
+      pxstart<-head(px,-(w-1))
+      pxend<-tail(px,-(w-1))
+      pxmax<-roll_max(px,n=w)
+      pxmin<-roll_min(px,n=w)
+      rng<-2*((pxend-pxmin)/(pxmax-pxmin)-0.5)
+      c(rep(0,w-1),rng)
+    }),dimnames=dimnames(x))
+    return(rng*(abs(rng)>thresh))
+  }
+}
+
+# ccy total returns matrix
+ccy_tr <- fread("ccy_tr.csv") %>% # ccy returns
+{as.matrix(.[,-1],rownames=.$rn)} %>%
+{.[,-which(apply(.,2,sd)<1e-10)]} %>%
+{apply(log(.),2,diff)} %>%
+{structure(.%*%diag((0.05/16)/apply(.,2,sd)),dimnames=dimnames(.))} %>%
+{cbind(.,USD=rep(0,nrow(.)))}
+
+qcr_tr<-fread("currency_total_returns.csv") %>% 
+{as.matrix(.[,2:(ncol(.)-1)],rownames=.$V1)}
+qcr_sd<-apply(qcr_tr,2,sd)
+qcr_rp<-qcr_tr%*%diag(0.05/qcr_sd)
+
+qcr_msig<-fread("momentum_signal.csv") %>% 
+{as.matrix(.[,2:(ncol(.)-1)],rownames=stri_sub(.$V1,1,10))} %>%
+{head(.,-1)[,colnames(qcr_tr)]}
+
+ndx<-intersect(rownames(ccy_tr),rownames(qcr_msig))
+
+sig<-qcr_msig[ndx,]
+tret<-structure(
+  ccy_tr[ndx,stri_sub(colnames(qcr_msig),1,3)]-ccy_tr[ndx,stri_sub(colnames(qcr_msig),-3,-1)],
+    dimnames=list(ndx,colnames(qcr_msig))
+)
+sig1<-tret2sig(tret,w=180,type="rangeloc")
+
+g<-rowSums(abs(sig))
+g1<-rowSums(abs(sig1))
+f<-ifelse(g1>0,g/g1,0)
+sig2<-diag(f)%*%sig1
+g2<-rowSums(abs(sig2))
+  
+perf<-tail(head(sig,-1)*tail(tret,-1),-180)
+perf1<-tail(head(sig2,-1)*tail(tret,-1),-180)
+
+gg_trend<-data.table(
+  qcr_g3=cumsum(rowMeans(perf[,grepl(ccy2pair(3),colnames(perf))])),
+  qcr_g10xg3=cumsum(rowMeans(perf[,!grepl(ccy2pair(3),colnames(perf))])),
+  sig_g3=cumsum(rowMeans(perf1[,grepl(ccy2pair(3),colnames(perf1))])),
+  sig_g10xg3=cumsum(rowMeans(perf1[,!grepl(ccy2pair(3),colnames(perf1))])),
+  date=as.Date(rownames(perf),format="%Y-%m-%d")
+) %>%
+  {melt(.,id.vars="date",measure.vars=setdiff(names(.),"date"))} %>% 
+  ggplot() +
+  geom_line(aes(x=date,y=value,col=variable))
+
+@
+
+
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
 #
 # simple backtest 
@@ -706,55 +783,7 @@ results2plot<-function(x){
 @
 
 
-<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
 
-gg_trend<-results2plot(rbind(
-  batch_result[name %in% c("g10","g3","g10xg3")],
-  batch_sign_result[name %in% c("g10","g3","g10xg3")]
-)) %>% 
-  ggplot() +
-  geom_line(
-    aes(
-      x=date,
-      y=perf*100,
-      col=name,
-      linetype=sig_type,
-      group=interaction(name,type,sig_type,w)
-    )
-  ) +
-  ggtitle(paste0("91-day Trend"))
-
-@
-
-We examine the relationship between window length, universe size and signal performance. The current
-parameter selection is compared with a wider range of values.
-
-\vskip 5mm
-
-\begin{center}
-\Sexpr{make_plot(
-  plot(gg_trend),
-  width="15cm",
-  height="15cm",
-  envir=environment()
-)}
-\end{center}
-
-\vskip 5mm
-
-\begin{center}
-\Sexpr{ntable(
-  df=results2df(rbind(
-    batch_result,
-    batch_sign_result
-  )),
-  scale="0.75",
-  title="backtest result summary"
-)}
-\end{center}
-
-\newpage
-\subsubsection{Sensitivity to parameters}
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
 
 gg_window <- results2df(batch_trend_window_result) %>%
@@ -798,31 +827,31 @@ gg_10subset <- results2df(batch_trend_10subsets_result) %>%
 @
 \vskip 5mm
 
+\newpage
+\subsubsection{Parameter selection}
+We examine the relationship between window length, selected currencies and signal performance. The current
+parameter selection is compared to other possiblse selections from a wider 32 currency universe.
+
 \begin{center}
 \begin{tabular}{m{10cm} m{10cm}}
-\multicolumn{1}{c}{Random vs actual 3-ccy choice} &
-\multicolumn{1}{c}{Random vs actual 7-ccy choice} \\
 \Sexpr{make_plot(
-  plot(gg_3subset),
+  plot(gg_trend),
   width="10cm",
   height="10cm",
   envir=environment()
 )}
 &
-\Sexpr{make_plot(
-  plot(gg_7subset),
-  width="10cm",
-  height="10cm",
-  envir=environment()
-)}
+\begin{minipage}{10cm}
+\begin{itemize}
+\item We use the proxy signal for this analysis 
+\item Actual and proxy signals are very correlated
+\item Conclusions carry over to actual signal
+\item The currency split is among the best ones that could have been selected, even among a 
+larger, 32 currency universe
+\item Momentum works better at a longer window than reversion
+\end{itemize}
+\end{minipage}
 \\
-\end{tabular}
-\end{center}
-
-\begin{center}
-\begin{tabular}{m{10cm} m{10cm}}
-\multicolumn{1}{c}{Random vs actual 3vs7-ccy choice} &
-\multicolumn{1}{c}{Window size} \\
 \Sexpr{make_plot(
   plot(gg_10subset),
   width="10cm",
@@ -860,13 +889,6 @@ window than momentum strategies
 the strategy more attractive than a simple beta product. On the other hand, this same reason might 
 prevent marketing the strategy as being purely driven by risk premia
 \end{description}
-
-\newpage
-\subsection{Interest-rate based signals }
-
-\newpage
-\subsection{Valuation-based based signals }
-
 
 \newpage
 \section{This document }

@@ -55,8 +55,14 @@ tret<-structure(
 )
 sig1<-tret2sig(tret,w=180,type="rangeloc")
 
+g<-rowSums(abs(sig))
+g1<-rowSums(abs(sig1))
+f<-ifelse(g1>0,g/g1,0)
+sig2<-diag(f)%*%sig1
+g2<-rowSums(abs(sig2))
+  
 perf<-tail(head(sig,-1)*tail(tret,-1),-180)
-perf1<-tail(head(sig1,-1)*tail(tret,-1),-180)
+perf1<-tail(head(sig2,-1)*tail(tret,-1),-180)
 
 data.table(
   qcr_g3=cumsum(rowMeans(perf[,grepl(ccy2pair(3),colnames(perf))])),
