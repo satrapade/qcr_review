@@ -101,8 +101,11 @@ cs1<- tail(-tret2sig_rngloc(qcr_tr,w=250),-ss) +
 
 mean(diag(cor(tail(qcr_stvf,-ss),cs1)))
 
-plot(c(rep(0,29),roll_mean(qcr_stvf[-(1:ss),1],30)),col=rgb(0,1,0,0.25),pch=19)
-lines(-cumsum(qcr_tr[-(1:ss),1])+cumsum(rowMeans(qcr_tr[-(1:ss),])),col="red")
+x<-c(rep(0,59),roll_mean(qcr_stvf[-(1:ss),1],60))
+x1<-c(rep(0,179),roll_mean(qcr_stvf[-(1:ss),1],180))
+y<-c(rep(0,179),200*roll_mean(qcr_tr[-(1:ss),1],180))
+plot(-(x-x1),col=rgb(0,1,0,0.25),pch=19,ylim=c(-0.5,0.5))
+lines(y,col="red")
 
 
 g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
