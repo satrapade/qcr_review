@@ -56,25 +56,67 @@ if(length(x)>0)file.remove(x)
 source("https://raw.githubusercontent.com/satrapade/latex_utils/master/latex_helpers_v2.R")
 
 
-qcr_ccys<-c(
-  "USD",
-  "EUR",
-  "JPY",
-  "GBP",
-  "AUD",
-  "CAD",
-  "CHF",
-  "SEK",
-  "NZD",
-  "NOK"
-)
-
-
 @
 
 \newpage
 \section{``Review of Technical Signals'' document}
+<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
 
+rgxccy<- .%>% {paste0(.,collapse="|")} %>% {paste0("^(",.,")(",.,")$")}
+
+qcr_tr<-fread("currency_total_returns.csv") %>% 
+{as.matrix(.[,2:(ncol(.)-1)],rownames=.$V1)}
+qcr_sd<-apply(qcr_tr,2,sd)
+qcr_rp<-qcr_tr%*%diag(0.05/qcr_sd)
+
+qcr_msig<-fread("momentum_signal.csv") %>% 
+{as.matrix(.[,2:(ncol(.)-1)],rownames=stri_sub(.$V1,1,10))} %>%
+{head(.,-1)[,colnames(qcr_tr)]}
+
+qcr_ltvf<-fread("ltfv_signal.csv") %>% 
+{as.matrix(.[,2:(ncol(.)-1)],rownames=stri_sub(.$V1,1,10))} %>%
+{head(.,-1)[,colnames(qcr_tr)]}
+
+qcr_stvf<-fread("stfv_signal.csv") %>% 
+{as.matrix(.[,2:(ncol(.)-1)],rownames=stri_sub(.$V1,1,10))} %>%
+{head(.,-1)[,colnames(qcr_tr)]}
+
+qcr_carry_level<-fread("carry_level_signal.csv") %>% 
+{as.matrix(.[,2:(ncol(.)-1)],rownames=stri_sub(.$V1,1,10))} %>%
+{head(.,-1)[,colnames(qcr_tr)]}
+
+qcr_carry_momentum<-fread("carry_momentum_signal.csv") %>% 
+{as.matrix(.[,2:(ncol(.)-1)],rownames=stri_sub(.$V1,1,10))} %>%
+{head(.,-1)[,colnames(qcr_tr)]}
+
+# and the backtests
+qcr<-head(qcr_msig,-1)*tail(qcr_tr,-1) %>%
+  {setNames(.,head(rownames(qcr_tr),-1))}
+
+qcr_pm<-head(g10,3) %>% 
+  rgxccy %>%
+  grepl(colnames(qcr)) %>%
+  diag %>%
+  {qcr%*%.}
+
+qcr_pr<-tail(g10,7) %>% 
+  rgxccy %>%
+  grepl(colnames(qcr)) %>%
+  diag %>%
+  {qcr%*%.}
+
+qcr_pmr<-qcr_pm-qcr_pr
+
+qcr_cm<-head(qcr_carry_momentum,-1)*tail(qcr_tr,-1) %>% 
+  {setNames(.,head(rownames(qcr_tr),-1))} 
+
+qcr_cl<-head(qcr_carry_level,-1)*tail(qcr_tr,-1) %>% 
+  {setNames(.,head(rownames(qcr_tr),-1))} 
+
+
+
+@
 \subsection{Signals, risk premia, sources of return}
 
 \vskip 5mm
@@ -156,28 +198,11 @@ tret2sig <- function(x,w=91,thresh=0.05,type="rangeloc"){
   }
 }
 
-g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
+g3regexp<- rgxccy(head(g10,3))
 
-ccy2pair <- . %>% 
-  head(g10,.) %>% 
-  {paste0(.,collapse="|")} %>%
-  {paste0("^(",.,")(",.,")$")}
 
-g3regexp<- ccy2pair(3) 
 
-qcr_tr<-fread("currency_total_returns.csv") %>% 
-{as.matrix(.[,2:(ncol(.)-1)],rownames=.$V1)}
-qcr_sd<-apply(qcr_tr,2,sd)
-qcr_rp<-qcr_tr%*%diag(0.05/qcr_sd)
-
-qcr_msig<-fread("momentum_signal.csv") %>% 
-{as.matrix(.[,2:(ncol(.)-1)],rownames=stri_sub(.$V1,1,10))} %>%
-{head(.,-1)[,colnames(qcr_tr)]}
-
-qcr<-head(qcr_msig,-1)*tail(qcr_tr,-1) %>% 
-  {setNames(.,head(rownames(qcr_tr),-1))}
-
-tor<-grepl(g3regexp,colnames(qcr_tr))
+tor<-grepl(rgxccy(head(g10,3)),colnames(qcr_tr))
 qcr_strat_long<-rowMeans(qcr[,tor])
 qcr_strat_short<-rowMeans(qcr[,!tor])
 qcr_strat<-qcr_strat_long-qcr_strat_short
@@ -196,23 +221,11 @@ cv<-local({
   {melt(.,id.vars="w",measure.vars=tail(names(.),-1))} %>%
   {.$subset<-ifelse(grepl(g3regexp,.$variable),"g3","g10xg3"); .}
 
-wstats<-cv[,
-  .(
-    g3_mean_cor=mean(value[subset=="g3"]),
-    g3_min_cor=min(value[subset=="g3"]),
-    g3_max_cor=max(value[subset=="g3"]),
-    g10xg3_mean_cor=mean(value[subset=="g10xg3"]),
-    g10xg3_min_cor=min(value[subset=="g10xg3"]),
-    g10xg3_max_cor=max(value[subset=="g10xg3"])
-
-  ),
-  keyby=w
-]
 
 
 # use window size that maximizes correlation
-qcrb_long<-head(tret2sig(qcr_rp,wstats[which.max(g3_mean_cor),w]),-1)*tail(qcr_rp,-1)
-qcrb_short<-head(tret2sig(qcr_rp,wstats[which.max(g10xg3_mean_cor),w]),-1)*tail(qcr_rp,-1)
+qcrb_long<-head(tret2sig(qcr_rp,180),-1)*tail(qcr_rp,-1)
+qcrb_short<-head(tret2sig(qcr_rp,180),-1)*tail(qcr_rp,-1)
 
 qcrb_strat<-rowMeans(qcrb_long[,tor])-rowMeans(qcrb_short[,!tor])
 
@@ -230,12 +243,6 @@ gg_cv<- cv %>%
   ggplot() + 
   geom_line(aes(x=w,y=100*value,col=subset,group=variable),size=2,alpha=0.66) +
   ggtitle(paste0("QCR-Benchmark signal correlation vs Benchmark window "))
-
-gg_cv1<- wstats[,.(w,g3_mean_cor,g10xg3_mean_cor)] %>%
-  {melt(.,id.vars="w",measure.vars=colnames(.)[-1])} %>%
-  ggplot() + 
-  geom_line(aes(x=w,y=100*value,col=variable,group=variable),size=2,alpha=0.66) +
-  ggtitle(paste0("QCR-Benchmark signal mean correlation vs Benchmark window"))
 
 @
 
@@ -339,7 +346,7 @@ making them more likely to experience large cumulative deviations from exchange 
 
 sig_ptf<-mapply(
   grepl,
-  pattern=mapply(ccy2pair,2:length(g10)),
+  pattern=mapply(function(i)rgxccy(head(g10,i)),2:length(g10)),
   MoreArgs=list(x=colnames(qcr_tr))
 )
 
@@ -418,12 +425,30 @@ real feature of the FX market.
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
 g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
 
-ccy2pair <- . %>% 
-  head(g10,.) %>% 
-  {paste0(.,collapse="|")} %>%
-  {paste0("^(",.,")(",.,")$")}
+universe2pairs<-function(
+  u,
+  all_ccy=c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
+){
+  uo<-all_ccy[sort(match(u,all_ccy))]
+  m<-outer(uo,uo,paste0)
+  m[upper.tri(m)]
+}
 
-g3regexp<- ccy2pair(3) 
+
+flip<-function(ccy)paste0(stri_sub(ccy,-3,-1),stri_sub(ccy,1,3))
+
+ccymap<-function(source,target){
+  res<-match(source,target,nomatch=0)+match(source,flip(target),nomatch=0)
+  res
+}
+
+sigmap<-function(from,to){
+  x<-ccymap(source=colnames(to),target=colnames(from))
+  flipped<-colnames(from)[x]!=colnames(to)
+  from[,x]%*%diag(ifelse(flipped,-1,1))
+}
+
+g3regexp<- rgxccy(head(g10,3))
 
 # make matrix of signals: sign of rolling total returns
 tret2sig <- function(x,w=91,thresh=0.05,type="rangeloc"){
@@ -454,21 +479,13 @@ ccy_tr <- fread("ccy_tr.csv") %>% # ccy returns
 {structure(.%*%diag((0.05/16)/apply(.,2,sd)),dimnames=dimnames(.))} %>%
 {cbind(.,USD=rep(0,nrow(.)))}
 
-qcr_tr<-fread("currency_total_returns.csv") %>% 
-{as.matrix(.[,2:(ncol(.)-1)],rownames=.$V1)}
-qcr_sd<-apply(qcr_tr,2,sd)
-qcr_rp<-qcr_tr%*%diag(0.05/qcr_sd)
-
-qcr_msig<-fread("momentum_signal.csv") %>% 
-{as.matrix(.[,2:(ncol(.)-1)],rownames=stri_sub(.$V1,1,10))} %>%
-{head(.,-1)[,colnames(qcr_tr)]}
 
 ndx<-intersect(rownames(ccy_tr),rownames(qcr_msig))
 
 sig<-qcr_msig[ndx,]
 tret<-structure(
   ccy_tr[ndx,stri_sub(colnames(qcr_msig),1,3)]-ccy_tr[ndx,stri_sub(colnames(qcr_msig),-3,-1)],
-    dimnames=list(ndx,colnames(qcr_msig))
+  dimnames=list(ndx,colnames(qcr_msig))
 )
 sig1<-tret2sig(tret,w=180,type="rangeloc")
 
@@ -482,10 +499,10 @@ perf<-tail(head(sig,-1)*tail(tret,-1),-180)
 perf1<-tail(head(sig2,-1)*tail(tret,-1),-180)
 
 gg_trend<-data.table(
-  qcr_g3=cumsum(rowMeans(perf[,grepl(ccy2pair(3),colnames(perf))])),
-  qcr_g10xg3=cumsum(rowMeans(perf[,!grepl(ccy2pair(3),colnames(perf))])),
-  sig_g3=cumsum(rowMeans(perf1[,grepl(ccy2pair(3),colnames(perf1))])),
-  sig_g10xg3=cumsum(rowMeans(perf1[,!grepl(ccy2pair(3),colnames(perf1))])),
+  qcr_g3=cumsum(rowMeans(perf[,grepl(rgxccy(head(g10,3)),colnames(perf))])),
+  qcr_g10xg3=cumsum(rowMeans(perf[,!grepl(rgxccy(head(g10,3)),colnames(perf))])),
+  sig_g3=cumsum(rowMeans(perf1[,grepl(rgxccy(head(g10,3)),colnames(perf1))])),
+  sig_g10xg3=cumsum(rowMeans(perf1[,!grepl(rgxccy(head(g10,3)),colnames(perf1))])),
   date=as.Date(rownames(perf),format="%Y-%m-%d")
 ) %>%
   {melt(.,id.vars="date",measure.vars=setdiff(names(.),"date"))} %>% 
@@ -500,6 +517,7 @@ gg_trend<-data.table(
 # simple backtest 
 #
 
+
 # ccy total returns matrix
 ccy_tr <- fread("ccy_tr.csv") %>% # ccy returns
   {as.matrix(.[,-1],rownames=.$rn)} %>%
@@ -508,200 +526,13 @@ ccy_tr <- fread("ccy_tr.csv") %>% # ccy returns
   {structure(.%*%diag((0.05/16)/apply(.,2,sd)),dimnames=dimnames(.))} %>%
   {cbind(.,USD=rep(0,nrow(.)))}
  
-universe2pairs<-function(u,all_ccy=colnames(get("ccy_tr",parent.frame()))){
-  uo<-all_ccy[sort(match(u,all_ccy))]
-  m<-outer(uo,uo,paste0)
-  m[upper.tri(m)]
-}
-
 # make cross returns from subsets
 universe2matrix<- function(u,tret){ 
   p<-universe2pairs(u,all_ccy=colnames(tret))
   structure(tret[,stri_sub(p,1,3)]-ccy_tr[,stri_sub(p,-3,-1)],dimnames=list(rownames(tret),p))
 }
 
-backtest<-function(
-  n,
-  u,
-  dir=1,
-  w=91,
-  sig_type="rangeloc",
-  tret=get("ccy_tr",parent.frame())
-){ # name, universe, direction, window
-  u_tr<-universe2matrix(u=u,tret=tret)
-  u_sig<-tret2sig(u_tr,w=as.integer(w),type=sig_type)*dir
-  u_perf<-head(u_sig,-1)*tail(u_tr,-1)
-  strat<-rowMeans(u_perf)
-  data.table(
-    name=n,
-    type=ifelse(dir>0,"trend","reversion"),
-    sig_type=sig_type,
-    window=as.integer(w),
-    universe=list(u),
-    pairs=list(colnames(u_tr)),
-    pair_perf=list(u_perf),
-    pair_sharpe=list(apply(u_perf,2,function(x)sqrt(356)*mean(x)/sd(x))),
-    strat=list(strat),
-    sharpe=sharpe(strat),
-    vol=100*16*sd(strat),digits=2,
-    perf=100*356*mean(strat)
-  )
-}
-
-backtest_subset<-function(
-  n,
-  u,
-  dir,
-  w,
-  sig_type,
-  tret,
-  source_backtest
-){
-  force(tret)
-  force(w)
-  u_pairs<-universe2pairs(u)
-  u_perf<-source_backtest$pair_perf[[1]][,u_pairs]*dir
-  strat<-rowMeans(u_perf)
-  data.table(
-    name=n,
-    type=ifelse(dir>0,"trend","reversion"),
-    sig_type=source_backtest$sig_type[[1]],
-    window=source_backtest$w[[1]],
-    universe=list(u),
-    pairs=list(u_pairs),
-    pair_perf=list(u_perf),
-    pair_sharpe=list(source_backtest$pair_sharpe[[1]][u_pairs]),
-    strat=list(strat),
-    sharpe=sharpe(strat),
-    vol=100*16*sd(strat),digits=2,
-    perf=100*356*mean(strat)
-  )
-}
-
-backtest_subset_ls<-function(
-  n,
-  u,
-  dir,
-  w,
-  sig_type,
-  tret,
-  source_backtest,
-  s=3
-){
-  force(tret)
-  force(w)
-  u_pairs_long<-universe2pairs(head(u,s))
-  u_pairs_short<-universe2pairs(tail(u,-s))
-  u_perf_long<-source_backtest$pair_perf[[1]][,u_pairs_long]
-  u_perf_short<-(-1)*source_backtest$pair_perf[[1]][,u_pairs_short]
-  strat<-rowMeans(u_perf_long)+rowMeans(u_perf_short)
-  data.table(
-    name=n,
-    type=ifelse(dir>0,"trend","reversion"),
-    sig_type=source_backtest$sig_type[[1]],
-    window=source_backtest$w[[1]],
-    universe=list(u),
-    pairs=list(c(u_pairs_long,u_pairs_short)),
-    pair_perf=list(cbind(u_perf_long,(-1)*u_perf_short)),
-    pair_sharpe=list(c(
-      source_backtest$pair_sharpe[[1]][u_pairs_long],
-      (-1)*source_backtest$pair_sharpe[[1]][u_pairs_short]
-    )),
-    strat=list(strat),
-    sharpe=sqrt(356)*mean(strat)/sd(strat),
-    vol=100*16*sd(strat),digits=2,
-    perf=100*356*mean(strat)
-  )
-}
-
-
-subsets<-list(g10=g10,g3=head(g10,3),g10xg3=tail(g10,-3),U=colnames(ccy_tr),W=setdiff(colnames(ccy_tr),g10))
-random_3subsets<-mapply(function(i)sample(colnames(ccy_tr),3),paste0("sample",1:700),SIMPLIFY=FALSE)
-random_7subsets<-mapply(function(i)sample(colnames(ccy_tr),7),paste0("sample",1:700),SIMPLIFY=FALSE)
-random_10subsets<-mapply(function(i)sample(colnames(ccy_tr),10),paste0("sample",1:700),SIMPLIFY=FALSE)
-
-batch<-data.table(expand.grid(
-    n=names(subsets),
-    dir=c(1),
-    sig_type="rangeloc",
-    w=c(91),
-    stringsAsFactors = FALSE
-)) %>% {.$u<-subsets[.$n];.}
-
-batch_sign<-data.table(expand.grid(
-    n=names(subsets),
-    dir=c(1),
-    sig_type="sign",
-    w=c(91),
-    stringsAsFactors = FALSE
-)) %>% {.$u<-subsets[.$n];.}
-
-batch_trend_window<-data.table(expand.grid(
-    n=c("g3","g10xg3"),
-    dir=c(1),
-    sig_type="rangeloc",
-    w=as.integer(seq(from=10,to=360,length.out=50)),
-    stringsAsFactors = FALSE
-)) %>% {.$u<-subsets[.$n];.}
-
-batch_trend_3subsets<-data.table(expand.grid(
-    n=names(random_3subsets),
-    dir=c(1),
-    sig_type="rangeloc",
-    w=91,
-    stringsAsFactors = FALSE
-)) %>% {.$u<-random_3subsets[.$n];.}
-
-batch_trend_7subsets<-data.table(expand.grid(
-    n=names(random_7subsets),
-    dir=c(1),
-    sig_type="rangeloc",
-    w=91,
-    stringsAsFactors = FALSE
-)) %>% {.$u<-random_7subsets[.$n];.}
-
-batch_trend_10subsets<-data.table(expand.grid(
-    n=names(random_10subsets),
-    dir=c(1),
-    sig_type="rangeloc",
-    w=91,
-    stringsAsFactors = FALSE
-)) %>% {.$u<-random_10subsets[.$n];.}
-
-
-batch_result<-do.call(rbind,do.call(mapply,c(backtest,batch,SIMPLIFY=FALSE)))
-batch_sign_result<-do.call(rbind,do.call(mapply,c(backtest,batch_sign,SIMPLIFY=FALSE)))
-
-batch_trend_window_result<-do.call(rbind,do.call(mapply,c(backtest,batch_trend_window,SIMPLIFY=FALSE)))
-
-batch_all_91trend_result<-backtest("U",colnames(ccy_tr),dir=1,w=91,sig_type="rangeloc",tret=ccy_tr)
-
-batch_trend_3subsets_result<-c(
-  list(FUN=backtest_subset),
-  batch_trend_3subsets,
-  list(MoreArgs=list(tret=ccy_tr,source_backtest=batch_all_91trend_result)),
-  list(SIMPLIFY=FALSE)
-) %>%
-{do.call(mapply,.)} %>%
-{do.call(rbind,.)}
-  
-batch_trend_7subsets_result<-c(
-  list(FUN=backtest_subset),
-  batch_trend_7subsets,
-  list(MoreArgs=list(tret=ccy_tr,source_backtest=batch_all_91trend_result)),
-  list(SIMPLIFY=FALSE)
-) %>%
-{do.call(mapply,.)} %>%
-{do.call(rbind,.)}
-  
-batch_trend_10subsets_result<-c(
-  list(FUN=backtest_subset_ls),
-  batch_trend_10subsets,
-  list(MoreArgs=list(tret=ccy_tr,source_backtest=batch_all_91trend_result,s=3)),
-  list(SIMPLIFY=FALSE)
-) %>%
-{do.call(mapply,.)} %>%
-{do.call(rbind,.)}
+all_results <- universe2matrix(u=colnames(ccy_tr),tret=ccy_tr)%>%{head(tret2sig(.,w=91),-1)*tail(.,-1)}
 
 
 @
@@ -709,119 +540,50 @@ batch_trend_10subsets_result<-c(
 
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
 
-
-results2df<-function(x)data.table( # formatted results summary
-    name=structure(
-      x$name,
-      hdr=tbl(c("Subset","name"),align="@{}l")
-    ),
-    strat=structure(
-      x$type,
-      hdr=tbl(c("Strategy","type"),align="@{}l")
-    ),
-    signal=structure(
-      x$sig_type,
-      hdr=tbl(c("Signal","type"),align="@{}l")
-    ),
-    window=structure(
-      x$window,
-      hdr=tbl(c("Window","size"),align="@{}l")
-    ),
-    pairs=structure(
-      mapply(length,x$pairs),
-      hdr=tbl(c("Pair","count"),align="@{}l")
-    ),
-    vol=structure(
-      x$vol,
-      hdr=tbl(c("Strat","vol"),align="@{}l"),
-      format=quote(n_fmt(round(this,digits=2)))
-    ),
-    perf=structure(
-      x$perf,
-      hdr=tbl(c("Strat","perf"),align="@{}l"),
-      format=quote(n_fmt(round(this,digits=2)))
-    ),
-    sharpe=structure(
-      x$sharpe,
-      hdr=tbl(c("Strat","sharpe"),align="@{}l"),
-      format=quote(n_fmt(round(this,digits=2)))
-    ),
-    min_sharpe=structure(
-      mapply(min,x$pair_sharpe),
-      hdr=tbl(c("Min","pair","sharpe"),align="@{}l"),
-      format=quote(n_fmt(round(this,digits=2)))
-    ),
-    max_sharpe=structure(
-      mapply(max,x$pair_sharpe),
-      hdr=tbl(c("Max","pair","sharpe"),align="@{}l"),
-      format=quote(n_fmt(round(this,digits=2)))
-    ),
-    mean_sharpe=structure(
-      mapply(mean,x$pair_sharpe),
-      hdr=tbl(c("Mean","pair","sharpe"),align="@{}l"),
-      format=quote(n_fmt(round(this,digits=2)))
+window_sharpe<-function(w=91){
+    res<-all_results[,grepl(rgxccy(g10),colnames(all_results))]
+    pm<-universe2matrix(u=head(g10,3),tret=ccy_tr)%>%{head(tret2sig(.,w=w),-1)*tail(.,-1)}
+    pr<-universe2matrix(u=tail(g10,7),tret=ccy_tr)%>%{head(tret2sig(.,w=w),-1)*tail(.,-1)}
+    res1<-cbind(
+      pm=rowMeans(pm),
+      pr=rowMeans(pr)
     )
-  )
-
-@
-
-
-<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
-
-results2plot<-function(x){
-  data.table( # results performance plot
-    name=rep(x$name,times=mapply(length,x$strat)),
-    type=rep(x$sig_type,times=mapply(length,x$strat)),
-    sig_type=rep(x$sig_type,times=mapply(length,x$strat)),
-    w=rep(x$w,times=mapply(length,x$strat)),
-    perf=do.call(c,mapply(cumsum,x$strat,SIMPLIFY=FALSE)),
-    date=as.Date(do.call(c,mapply(rownames,x$pair_perf,SIMPLIFY=FALSE)),format="%Y-%m-%d")
-  )
+    res2<-res1%*%diag(0.01/apply(res1,2,sd))
+    apply(res2%*%cbind(pm=c(1,0),pr=c(0,1),pmr=c(1,-1)),2,sharpe)
 }
 
+window_sharpe_df<- seq(30,250,length.out=30) %>%
+  { data.table(w=.,t(mapply(window_sharpe,.))) }
 
-@
-
-
-
-<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
-
-gg_window <- results2df(batch_trend_window_result) %>%
-  melt(id.vars=c("name","window"),measure.vars="sharpe",variable.name="stat",value.name="sharpe") %>%
+gg_window <- window_sharpe_df %>%
+  melt(id.vars=c("w"),measure.vars=c("pm","pr","pmr"),variable.name="strat",value.name="sharpe") %>%
   ggplot() +
-  geom_line(aes(x=window,y=sharpe,col=name),size=2)+
+  geom_line(aes(x=w,y=sharpe,col=strat),size=2)+
   ggtitle(paste0("Sharpe vs window length"))
 
-gg_3subset <- results2df(batch_trend_3subsets_result) %>%
-  ggplot(aes(x=sharpe)) +
-  geom_histogram(bins=50)+
-  ggtitle(paste0("Sharpe vs 3-currency subset selection"))+
-  geom_vline(
-    xintercept = results2df(batch_result)[strat=="trend" & name=="g3",sharpe],
-    color=rgb(1,0,0),
-    alpha=0.5,
-    size=2
-  )
+#
+# sharpe vs currency selection histogram
+#
 
-gg_7subset <- results2df(batch_trend_7subsets_result) %>%
-  ggplot(aes(x=sharpe)) +
-  geom_histogram(bins=50)+
-  ggtitle(paste0("Sharpe vs 7-currency subset selection"))+
-  geom_vline(
-    xintercept = results2df(batch_result)[strat=="trend" & name=="g10xg3",sharpe],
-    color=rgb(1,0,0),
-    alpha=0.5,
-    size=2
-  )
+sample_sharpe<-function(s=sample(colnames(ccy_tr),10)){
+    res<-all_results[,grepl(rgxccy(s),colnames(all_results))]
+    pm<-grepl(rgxccy(head(s,3)),colnames(res))
+    pr<-grepl(rgxccy(tail(s,7)),colnames(res))
+    res1<-cbind(
+      pm=rowSums(res%*%diag(pm*length(pm)/sum(pm)))/sum(pm),
+      pr=rowSums(res%*%diag(pr*length(pr)/sum(pr)))/sum(pr)
+    )
+    res2<-res1%*%diag(0.01/apply(res1,2,sd))
+    apply(res2%*%cbind(pm=c(1,0),pr=c(0,1),pmr=c(1,-1)),2,sharpe)
+}
 
-strat_long<-batch_result[type=="trend" & name=="g3",strat][[1]]
-strat_short<-batch_result[type=="trend" & name=="g10xg3",strat][[1]]
-
-gg_10subset <- results2df(batch_trend_10subsets_result) %>%
+gg_10subset <- data.table(
+  sharpe= mapply(function(x)sample_sharpe()[3],1:1000)
+) %>% 
   ggplot(aes(x=sharpe)) +
   geom_histogram(bins=50)+
   ggtitle(paste0("Sharpe vs 3vs7-currency subset selection"))+
-  geom_vline(xintercept = sharpe(strat_long-strat_short),color=rgb(1,0,0),alpha=0.5,size=2)
+  geom_vline(xintercept = sample_sharpe(g10)[3],color=rgb(1,0,0),alpha=0.5,size=2)
 
 
 @
@@ -830,7 +592,7 @@ gg_10subset <- results2df(batch_trend_10subsets_result) %>%
 \newpage
 \subsubsection{Parameter selection}
 We examine the relationship between window length, selected currencies and signal performance. The current
-parameter selection is compared to other possiblse selections from a wider 32 currency universe.
+parameter selection is compared to other possiblse selections from a wider, 32-currency universe.
 
 \begin{center}
 \begin{tabular}{m{10cm} m{10cm}}
@@ -889,6 +651,12 @@ window than momentum strategies
 the strategy more attractive than a simple beta product. On the other hand, this same reason might 
 prevent marketing the strategy as being purely driven by risk premia
 \end{description}
+
+\newpage
+\section{Carry signals}
+
+\newpage
+\section{Fair value signals}
 
 \newpage
 \section{This document }
