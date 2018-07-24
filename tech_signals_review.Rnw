@@ -64,6 +64,7 @@ source("https://raw.githubusercontent.com/satrapade/latex_utils/master/latex_hel
 g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
 
 rgxccy<- .%>% {paste0(.,collapse="|")} %>% {paste0("^(",.,")(",.,")$")}
+sharpe<-function(strat)sqrt(356)*mean(strat)/sd(strat)
 
 qcr_tr<-fread("currency_total_returns.csv") %>% 
 {as.matrix(.[,2:(ncol(.)-1)],rownames=.$V1)}
@@ -92,29 +93,65 @@ qcr_carry_momentum<-fread("carry_momentum_signal.csv") %>%
 
 # and the backtests
 qcr<-head(qcr_msig,-1)*tail(qcr_tr,-1) %>%
-  {setNames(.,head(rownames(qcr_tr),-1))}
+  {setNames(.,tail(rownames(qcr_tr),-1))}
 
 qcr_pm<-head(g10,3) %>% 
   rgxccy %>%
   grepl(colnames(qcr)) %>%
   diag %>%
-  {qcr%*%.}
+  {structure(qcr%*%.,dimnames=dimnames(qcr))}
 
 qcr_pr<-tail(g10,7) %>% 
   rgxccy %>%
   grepl(colnames(qcr)) %>%
   diag %>%
-  {qcr%*%.}
+  {(-1)*structure(qcr%*%.,dimnames=dimnames(qcr))}
 
-qcr_pmr<-qcr_pm-qcr_pr
+qcr_pmr<-qcr_pm+qcr_pr
 
 qcr_cm<-head(qcr_carry_momentum,-1)*tail(qcr_tr,-1) %>% 
-  {setNames(.,head(rownames(qcr_tr),-1))} 
+  {setNames(.,tail(rownames(qcr_tr),-1))} 
 
 qcr_cl<-head(qcr_carry_level,-1)*tail(qcr_tr,-1) %>% 
-  {setNames(.,head(rownames(qcr_tr),-1))} 
+  {setNames(.,tail(rownames(qcr_tr),-1))} 
+
+qcr_lv<-head(qcr_ltvf,-1)*tail(qcr_tr,-1) %>% 
+  {setNames(.,tail(rownames(qcr_tr),-1))} 
 
 
+qcr_sv<-head(qcr_stvf,-1)*tail(qcr_tr,-1) %>% 
+  {setNames(.,tail(rownames(qcr_tr),-1))} 
+
+signal_df<-data.table(
+  date=as.Date(rownames(qcr)),
+  cbind(
+    pm=rowSums(qcr_pm),
+    pr=rowSums(qcr_pr),
+    sv=rowSums(qcr_sv),
+    sv_g3=rowSums(qcr_sv[,grepl(rgxccy(g10[1:3]),colnames(qcr_sv))]),
+    sv_g10xg3=rowSums(qcr_sv[,grepl(rgxccy(g10[4:10]),colnames(qcr_sv))]),
+    lv=rowSums(qcr_lv),
+    lv_g3=rowSums(qcr_lv[,grepl(rgxccy(g10[1:3]),colnames(qcr_lv))]),
+    lv_g10xg3=rowSums(qcr_lv[,grepl(rgxccy(g10[4:10]),colnames(qcr_lv))]),
+    cm=rowSums(qcr_cm),
+    cm_g3=rowSums(qcr_cm[,grepl(rgxccy(g10[1:3]),colnames(qcr_cm))]),
+    cm_g10xg3=rowSums(qcr_cm[,grepl(rgxccy(g10[4:10]),colnames(qcr_cm))]),
+    cl=rowSums(qcr_cl),
+    cl_g3=rowSums(qcr_cl[,grepl(rgxccy(g10[1:3]),colnames(qcr_cl))]),
+    cl_g10xg3=rowSums(qcr_cl[,grepl(rgxccy(g10[4:10]),colnames(qcr_cl))]),
+    svlv_g3=rowSums((qcr_sv+qcr_lv)[,grepl(rgxccy(g10[1:3]),colnames(qcr_sv))]),
+    svlv_g10xg3=rowSums((qcr_sv+qcr_lv)[,grepl(rgxccy(g10[4:10]),colnames(qcr_sv))])
+  ) %>% {structure(.%*%diag(0.0025/apply(.,2,sd)),dimnames=dimnames(.))} 
+) 
+
+ss<-which(abs(signal_df$sv)>0)[1]
+
+gg_signals <- x <- signal_df[ss:nrow(signal_df),] %>%
+  {for(i in names(.)[-1]).[[i]]<-cumsum(.[[i]]); .} %>%
+  {melt(.,id.vars="date",measure.vars=c("pm","pr","sv","lv","cm","cl"))} %>% 
+  ggplot() + 
+  geom_line(aes(x=date,y=value,color=variable),size=1.5) +
+  ggtitle("QCR signal performance overview")
 
 @
 \subsection{Signals, risk premia, sources of return}
@@ -131,32 +168,63 @@ A systematic Approach to Factor Investing. Oxford University Press 2014}, with t
 \vskip 5mm
 
 \begin{center}
-\begin{tabular}{l l l l}
+\begin{tabular}{l l l l l l l}
 \hline
-\multicolumn{4}{c}{QCR signals} \\
-signal & type & risk premium & \Sexpr{tbl(c("intuitiveness/clarity","of risk premium","mapping"),align="l")} \\
+\multicolumn{7}{c}{QCR signals} \\
+name & 
+subset & 
+signal & 
+type & 
+\Sexpr{tbl(c("risk","premium"),align="l")} & 
+\Sexpr{tbl(c("intuitiveness/clarity","of risk premium","mapping"),align="l")} &
+\Sexpr{tbl(c("sharpe","ratio"),align="l")}
+\\
 \hline
-price momentum & technical & momentum & high \\
-price reversion & technical & volatility & medium \\
-yield momentum &  fundamental & {\bf hard to tell} & low \\
-risk-adjusted yield & fundamental & carry & high \\
-long-term fair value & fundamental & value & high \\
-short-term fair value & fundamental & value & low \\
+{\bf pm} & g3 & price momentum & technical & momentum & high & \Sexpr{round(sharpe(tail(signal_df$pm,-ss)),digits=2)} \\
+{\bf pr} & g10xg3 & price reversion & technical & volatility & medium & \Sexpr{round(sharpe(tail(signal_df$pr,-ss)),digits=2)} \\
+{\bf cm} & g10 & yield momentum &  fundamental & {\bf hard to tell} & low & \Sexpr{round(sharpe(tail(signal_df$cm,-ss)),digits=2)}\\
+{\bf cl} & g10 & risk-adjusted yield & fundamental & carry & high & \Sexpr{round(sharpe(tail(signal_df$cl,-ss)),digits=2)}\\
+{\bf lv} & g10 & long-term fair value & fundamental & value & high & \Sexpr{round(sharpe(tail(signal_df$lv,-ss)),digits=2)}\\
+{\bf sv} & g10 & short-term fair value & fundamental & value & low & \Sexpr{round(sharpe(tail(signal_df$sv,-ss)),digits=2)}\\
 \end{tabular}
 \end{center}
 
 \vskip 5mm
 
-\noindent Some of the risk factors do not behave as one would expect them to behave. Risk premia would be expected to 
-rise during market-wide risk-off periods, even if they are uncorrelated during other periods. These ``unusual'' 
-risk factors are sometimes called ``market anomalies'' as opposed to  ``risk-premia'' \footnote{For example see 
-the introduction in Tobias J. Moskowitz, Yao Hua Ooi, Lasse Heje Pedersen. Time series momentum. Journal of 
-Financial Economics 104(2012) 228-250}. It is worth noting that there are many more ``anomalies'' than 
-there are pure ``risk premia''.
-
+\begin{center}
+\begin{tabular}{ m{12cm} m{8cm} }
+\Sexpr{make_plot(
+  plot(gg_signals),
+  width="12cm",
+  height="12cm",
+  envir=environment()
+)}
+&
+\begin{minipage}{8cm}
+\begin{itemize}
+\item the {\bf sv} signal is only available from \Sexpr{as.character(signal_df$date[ss])}.
+because its contribution is so important, we limit this analysis to the live period
+for this signal
+\item all signals are normalized to a 5\% volatility. differences in return are
+therefore also differences in sharpe ratios
+\item signals ordered by sharpe: {\bf sv}, {\bf pr}, {\bf lv}, {\bf cl} and 
+finallly {\bf pm}  
+\item {\bf pr} and {\bf sv} have a correlation of 
+\Sexpr{round(100*cor(tail(signal_df$pr,-ss),tail(signal_df$sv_g10xg3,-ss)),digits=1)}\% over
+g10xg3, which is the set of shared currency pairs
+\item some sources of return are better classified as ``market anomalies'' rather than 
+``risk-premia'' \footnote{For example see the introduction in Tobias J. Moskowitz, Yao 
+Hua Ooi, Lasse Heje Pedersen. Time series momentum. Journal of Financial 
+Economics 104(2012) 228-250}.
+\item there are more ``anomalies'' than there are ``risk premia''
+\end{itemize}
+\end{minipage}
+\\
+\end{tabular}
+\end{center}
 
 \newpage
-\subsection{Technical signals: price momentum, price reversion}
+\subsection{Technical signals: {\bf pm}, {\bf pr}}
 
 \vskip 5mm
 
@@ -165,17 +233,19 @@ Summary:
 \vskip 5mm
 
 \begin{enumerate}
-\item Analysis of the indicator used by QCR's reversion and the momentum strategies
-\item Review of proposed currency split and arguments motivating the choices
-\item Backtest results relating to currency splits
-\item Selected parameters, parameter sensitivity
+\item price momentum and price reversion use the same signal to implement opposite positions.
+\item the signal is equivalent to a rolling ``location-in-range'' indicator
+\item a choice is made to apply momentum to g3 and reversion to g10xg3
+\item selected parameters perform very well over a long history
+\item we believe the long-term performance achieved by allocating momentum to g3 and 
+reversion to g10xg3 is a genuine ``market anomaly''. this is a valuable insight
 \end{enumerate}
 
 
 \subsubsection{QCR's price momentum signal}
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
 
-sharpe<-function(strat)sqrt(356)*mean(strat)/sd(strat)
+
 
 # make matrix of signals: sign of rolling total returns
 tret2sig <- function(x,w=91,thresh=0.05,type="rangeloc"){
@@ -653,10 +723,10 @@ prevent marketing the strategy as being purely driven by risk premia
 \end{description}
 
 \newpage
-\section{Carry signals}
+\subsection{Carry signals: {\bf cl}, {\bf cm}}
 
 \newpage
-\section{Fair value signals}
+\subsection{Fair value signals: {\bf sv}, {\bf lv}}
 
 \newpage
 \section{This document }
