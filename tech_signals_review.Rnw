@@ -61,6 +61,50 @@ source("https://raw.githubusercontent.com/satrapade/latex_utils/master/latex_hel
 \newpage
 \section{``Review of Technical Signals'' document}
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+# a couple of proxy signals
+
+tret2sig_macross <- function(x,wf=91,ws=250){
+    px<-apply(x,2,cumsum)
+    maf<-apply(px,2,function(p)c(rep(0,wf-1),roll_sum(p,n=wf)))
+    mas<-apply(px,2,function(p)c(rep(0,ws-1),roll_sum(p,n=ws)))
+    maf-mas
+}
+
+tret2sig_tret <- function(x,w=91,thresh=0.05){
+    tret<-apply(x,2,function(p)c(rep(0,w-1),roll_sum(p,n=w)))
+    abstret<-apply(x,2,function(p)c(rep(0,w-1),roll_sum(abs(p),n=w)))
+    attributes(tret)$dimnames<-dimnames(x)
+    return(ifelse(abstret>0,tret/abstret,0))
+}
+
+tret2sig_rngloc <- function(x,w=91,thresh=0.05){
+    rng<-structure(apply(x,2,function(p){
+      px<-cumsum(p)
+      pxstart<-head(px,-(w-1))
+      pxend<-tail(px,-(w-1))
+      pxmax<-roll_max(px,n=w)
+      pxmin<-roll_min(px,n=w)
+      rng<-2*((pxend-pxmin)/(pxmax-pxmin)-0.5)
+      c(rep(0,w-1),rng)
+    }),dimnames=dimnames(x))
+    return(rng*(abs(rng)>thresh))
+}
+
+
+mean(diag(cor(tail(qcr_stvf,-ss),tail(-tret2sig_rngloc(qcr_tr,w=250),-ss))))
+mean(diag(cor(tail(qcr_stvf,-ss),tail(-tret2sig_tret(qcr_tr,w=60),-ss))))
+mean(diag(cor(tail(qcr_stvf,-ss),tail(-tret2sig_macross(qcr_tr,wf=90,ws=250),-ss))))
+
+cs1<- tail(-tret2sig_rngloc(qcr_tr,w=250),-ss) +
+  5*tail(-tret2sig_tret(qcr_tr,w=60),-ss) +
+  0.5*tail(-tret2sig_macross(qcr_tr,wf=90,ws=250),-ss)
+
+mean(diag(cor(tail(qcr_stvf,-ss),cs1)))
+
+plot(c(rep(0,29),roll_mean(qcr_stvf[-(1:ss),1],30)),col=rgb(0,1,0,0.25),pch=19)
+lines(-cumsum(qcr_tr[-(1:ss),1])+cumsum(rowMeans(qcr_tr[-(1:ss),])),col="red")
+
+
 g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
 
 rgxccy<- .%>% {paste0(.,collapse="|")} %>% {paste0("^(",.,")(",.,")$")}
@@ -245,32 +289,7 @@ reversion to g10xg3 is a genuine ``market anomaly''. this is a valuable insight
 \subsubsection{QCR's price momentum signal}
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
 
-
-
-# make matrix of signals: sign of rolling total returns
-tret2sig <- function(x,w=91,thresh=0.05,type="rangeloc"){
-  if(type=="sign"){
-    tret<-apply(x,2,function(p)c(rep(0,w-1),roll_sum(p,n=w)))
-    attributes(tret)$dimnames<-dimnames(x)
-    return(sign(tret))
-  }
-  if(type=="rangeloc"){
-    rng<-structure(apply(x,2,function(p){
-      px<-cumsum(p)
-      pxstart<-head(px,-(w-1))
-      pxend<-tail(px,-(w-1))
-      pxmax<-roll_max(px,n=w)
-      pxmin<-roll_min(px,n=w)
-      rng<-2*((pxend-pxmin)/(pxmax-pxmin)-0.5)
-      c(rep(0,w-1),rng)
-    }),dimnames=dimnames(x))
-    return(rng*(abs(rng)>thresh))
-  }
-}
-
 g3regexp<- rgxccy(head(g10,3))
-
-
 
 tor<-grepl(rgxccy(head(g10,3)),colnames(qcr_tr))
 qcr_strat_long<-rowMeans(qcr[,tor])
