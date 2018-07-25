@@ -421,7 +421,7 @@ gg_cor_traj <- corr_traj %>%
 
 @
 \newpage
-\subsection{Correlation trajectories: signal vs rolling returns }
+\subsection{Cross-correlation functions: signals vs rolling returns }
 
 \vskip 5mm
 
