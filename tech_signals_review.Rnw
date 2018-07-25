@@ -80,34 +80,26 @@ tret2sig_tret <- function(x,w=91,thresh=0.05){
 }
 
 tret2sig_rngloc <- function(x,w=91,thresh=0.05){
-    rng<-structure(apply(x,2,function(p){
-      px<-cumsum(p)
-      pxstart<-head(px,-(w-1))
-      pxend<-tail(px,-(w-1))
-      pxmax<-roll_max(px,n=w)
-      pxmin<-roll_min(px,n=w)
-      rng<-2*((pxend-pxmin)/(pxmax-pxmin)-0.5)
-      c(rep(0,w-1),rng)
-    }),dimnames=dimnames(x))
+    px<-apply(x,2,cumsum)
+    px_max<-apply(px,2,roll_maxr,n=w,fill=0)
+    px_min<-apply(px,2,roll_minr,n=w,fill=0)
+    px_range<-px_max-px_min
+    rng<-2*(ifelse(px_range>1e-10,(px-px_min)/px_range,0)-0.5)
     return(rng*(abs(rng)>thresh))
 }
 
 
-# mean(diag(cor(tail(qcr_stvf,-ss),tail(-tret2sig_rngloc(qcr_tr,w=250),-ss))))
-# mean(diag(cor(tail(qcr_stvf,-ss),tail(-tret2sig_tret(qcr_tr,w=60),-ss))))
-# mean(diag(cor(tail(qcr_stvf,-ss),tail(-tret2sig_macross(qcr_tr,wf=90,ws=250),-ss))))
-# 
-# cs1<- tail(-tret2sig_rngloc(qcr_tr,w=250),-ss) +
-#   5*tail(-tret2sig_tret(qcr_tr,w=60),-ss) +
-#   0.5*tail(-tret2sig_macross(qcr_tr,wf=90,ws=250),-ss)
-# 
-# mean(diag(cor(tail(qcr_stvf,-ss),cs1)))
-# 
-# x<-c(rep(0,59),roll_mean(qcr_stvf[-(1:ss),1],60))
-# x1<-c(rep(0,179),roll_mean(qcr_stvf[-(1:ss),1],180))
-# y<-c(rep(0,179),200*roll_mean(qcr_tr[-(1:ss),1],180))
-# plot(-(x-x1),col=rgb(0,1,0,0.25),pch=19,ylim=c(-0.5,0.5))
-# lines(y,col="red")
+tret2sig_rngloca <- function(x,w=91,ws=91,thresh=0.05){
+    px<-apply(x,2,cumsum)
+    px_max<-apply(px,2,roll_maxr,n=w,fill=0)
+    px_min<-apply(px,2,roll_minr,n=w,fill=0)
+    px_range<-px_max-px_min
+    rng<-2*(ifelse(px_range>1e-10,(px-px_min)/px_range,0)-0.5)
+    pnl<-head(rng,-1)*tail(x,-1)
+    sum_pnl<-apply(sign(pnl),2,roll_sumr,n=ws,fill=0)
+    sign_pnl<-sign(sum_pnl)
+    return(sign_pnl[c(1,seq(nrow(pnl))),]*rng*(abs(rng)>thresh))
+}
 
 
 g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
@@ -229,12 +221,18 @@ type &
 \Sexpr{tbl(c("sharpe","ratio"),align="l")}
 \\
 \hline
-{\bf pm} & g3 & price momentum & technical & momentum & high & \Sexpr{round(sharpe(tail(signal_df$pm,-ss)),digits=2)} \\
-{\bf pr} & g10xg3 & price reversion & technical & volatility & medium & \Sexpr{round(sharpe(tail(signal_df$pr,-ss)),digits=2)} \\
-{\bf cm} & g10 & yield momentum &  fundamental & {\bf hard to tell} & low & \Sexpr{round(sharpe(tail(signal_df$cm,-ss)),digits=2)}\\
-{\bf cl} & g10 & risk-adjusted yield & fundamental & carry & high & \Sexpr{round(sharpe(tail(signal_df$cl,-ss)),digits=2)}\\
-{\bf lv} & g10 & long-term fair value & fundamental & value & high & \Sexpr{round(sharpe(tail(signal_df$lv,-ss)),digits=2)}\\
-{\bf sv} & g10 & short-term fair value & fundamental & value & low & \Sexpr{round(sharpe(tail(signal_df$sv,-ss)),digits=2)}\\
+{\bf pm} & g3 & price momentum & technical & momentum & high & 
+\Sexpr{round(sharpe(tail(signal_df$pm,-ss)),digits=2)} \\
+{\bf pr} & g10xg3 & price reversion & technical & volatility & medium & 
+\Sexpr{round(sharpe(tail(signal_df$pr,-ss)),digits=2)} \\
+{\bf cm} & g10 & yield momentum &  fundamental & {\bf hard to tell} & low & 
+\Sexpr{round(sharpe(tail(signal_df$cm,-ss)),digits=2)}\\
+{\bf cl} & g10 & risk-adjusted yield & fundamental & carry & high & 
+\Sexpr{round(sharpe(tail(signal_df$cl,-ss)),digits=2)}\\
+{\bf lv} & g10 & long-term fair value & fundamental & value & high & 
+\Sexpr{round(sharpe(tail(signal_df$lv,-ss)),digits=2)}\\
+{\bf sv} & g10 & short-term fair value & fundamental & value & low & 
+\Sexpr{round(sharpe(tail(signal_df$sv,-ss)),digits=2)}\\
 \end{tabular}
 \end{center}
 
@@ -345,52 +343,10 @@ m<-cbind(
   prxy=as.vector(proxy[all_signals_live,])
 )
 
-x1<-t(apply(apply(qcr_tr,2,roll_sumr,n=30,fill=0),1,rank))/ncol(qcr_tr)-0.5
-
-y1<-apply(qcr_tr,2,function(x){
-  x1<-roll_sdr(x,30,fill=0)
-  x2<-roll_meanr(x,30,fill=0)
-  ifelse(x1>0,x2/x1,0)
-})
-
-y2<-t(apply(y1,1,rank))/ncol(y1)-0.5
-
-mean(diag(cor(
-  qcr_stvf[all_signals_live,],
-  (-1)*proxy[all_signals_live,]+
-  (+1)*qcr_carry_level[all_signals_live,]+
-  (+1)*qcr_carry_momentum[all_signals_live,]+
-  (-0.5)*x1[all_signals_live,]+
-  (-0.5)*y1[all_signals_live,]
-)))
-
-pnl0<-(-(head(proxy,-1)*tail(qcr_tr,-1))[tail(all_signals_live,-1),])%>%
-  {.%*%diag(0.05/apply(.,2,sd))}
-
-pnl1<-((head(qcr_stvf,-1)*tail(qcr_tr,-1))[tail(all_signals_live,-1),])%>%
-  {.%*%diag(0.05/apply(.,2,sd))}
-
-pnl2<-((head(qcr_stvf*(sign(qcr_stvf)==sign(-proxy)),-1)*tail(qcr_tr,-1))[tail(all_signals_live,-1),])%>%
-  {.%*%diag(0.05/apply(.,2,sd))}
-
-pnl3<-((head(qcr_stvf*(sign(qcr_stvf)!=sign(-proxy)),-1)*tail(qcr_tr,-1))[tail(all_signals_live,-1),])%>%
-      {.%*%diag(0.05/apply(.,2,sd))}
-
-pnl4<-(-(head(proxy*(sign(qcr_stvf)!=sign(-proxy)),-1)*tail(qcr_tr,-1))[tail(all_signals_live,-1),])%>%
-      {.%*%diag(0.05/apply(.,2,sd))}
-
-pnl5<-(-(head(proxy*(sign(qcr_stvf)==sign(-proxy)),-1)*tail(qcr_tr,-1))[tail(all_signals_live,-1),])%>%
-      {.%*%diag(0.05/apply(.,2,sd))}
-
-pnl6<-(-(head(proxy*(sign(qcr_stvf)==0),-1)*tail(qcr_tr,-1))[tail(all_signals_live,-1),])%>%
-      {.%*%diag(0.05/apply(.,2,sd))}
-
-#plot(cumsum(rowSums(pnl4+pnl5+pnl6)/3))
-#plot(cumsum(rowSums(pnl0)))
 
 @
 \newpage
-\subsection{Signal plots: columns are pairs ordered by average carry. Signal, proxy correlations}
+\subsection{Signal plots: columns are pairs ordered by average carry. Correlation: signals and proxy}
 
 \begin{center}
 \begin{tabular}{ m{10cm} m{10cm} }
@@ -439,6 +395,54 @@ pnl6<-(-(head(proxy*(sign(qcr_stvf)==0),-1)*tail(qcr_tr,-1))[tail(all_signals_li
 \end{tabular}
 \end{center}
 
+<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+
+qcr_px<-apply(qcr_tr,2,cumsum)
+
+scor<-function(i=120,n=3000){
+  res<-sign(tail(qcr_px,-i)-head(qcr_px,-i))
+  data.table(
+    pm=mean(tail(sign(tail(qcr_msig,-i))*res,n)),
+    cm=mean(tail(sign(tail(qcr_carry_momentum,-i))*res,n)),
+    cl=mean(tail(sign(tail(qcr_carry_level,-i))*res,n)),
+    lv=mean(tail(sign(tail(qcr_ltvf,-i))*res,n)),
+    sv=mean(tail(sign(tail(qcr_stvf,-i))*res,n))
+  )
+}
+
+corr_traj<-seq(10,500,length.out=100) %>% as.integer %>% {data.table(
+  i=.,
+  do.call(rbind,mapply(scor,.,SIMPLIFY=FALSE))
+)}
+
+gg_cor_traj <- corr_traj %>%
+{ melt(.,id.vars="i",measure.vars=names(.)[-1]) } %>%
+ ggplot()+geom_point(aes(x=i,y=value,col=variable,group=variable))
+
+@
+\newpage
+\subsection{Correlation trajectories: signal vs rolling returns }
+
+\vskip 5mm
+
+\begin{center}
+\Sexpr{make_plot(
+  plot(gg_cor_traj),
+  width="15cm",
+  height="15cm",
+  envir=environment()
+)}
+\end{center}
+
+\vskip 5mm
+
+\begin{itemize}
+\item long-term signal sign-correlations trend higher
+\item short-term signal sign correlations peak at the signal's window size
+\item signals labelled ``long-term'' are indeed long term ones
+\item signals labelled ``short-term'' are indeed short-term ones
+\item short-term signal inputs correlate to recent returns, these were most likely chosen for this reason
+\end{itemize}
 
 \newpage
 \subsection{Technical signals: {\bf pm}, {\bf pr}}
