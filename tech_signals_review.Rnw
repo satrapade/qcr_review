@@ -43,6 +43,7 @@ require(knitr)
 require(stringi)
 require(RcppRoll)
 require(magick)
+require(corrplot)
 
 @
 
@@ -264,7 +265,8 @@ g10xg3, which is the set of shared currency pairs
 ``risk-premia'' \footnote{For example see the introduction in Tobias J. Moskowitz, Yao 
 Hua Ooi, Lasse Heje Pedersen. Time series momentum. Journal of Financial 
 Economics 104(2012) 228-250}.
-\item there are more ``anomalies'' than there are ``risk premia''
+\item we construct a proxy signal, {\bf prxy}, which acts like a ``copy'' of {\bf pm} which
+we can use for further analysis
 \end{itemize}
 \end{minipage}
 \\
@@ -273,14 +275,28 @@ Economics 104(2012) 228-250}.
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
 # plot(image(Matrix(qcr_carry_level),aspect=1,main="carry level",xlab="currency pair",ylab="date")),
 
+make_date_range<-function(start, end){
+  from <- as.Date(gsub("[\"\'a-z]","",start), format = "%Y-%m-%d")
+  to <- as.Date(gsub("[\"\'a-z]","",end), format = "%Y-%m-%d")
+  date_seq <- seq(from = from, to = to, by = 1)
+  res  <- as.character(date_seq, format = "%Y-%m-%d" )
+  return(res)
+}
+
+
 img_sig <- function(x){
   res<- x %>% 
     {.[rowSums(abs(.))>1e-10,] } %>%
+    {
+      all_dates <- rownames(.) %>% {make_date_range(start=min(.),end=max(.))}
+      ndx<-findInterval(as.Date(all_dates),as.Date(rownames(.)))
+      structure(.[ndx,],dimnames=list(all_dates,colnames(.)))
+    } %>%
     {data.table(date=as.Date(rownames(.)),.)} %>% 
     {melt(.,id.vars="date",measure.vars=names(.)[-1])}
   gg1 <-  ggplot(res) +
     geom_raster(aes(x=variable,y=date,fill = value), interpolate = FALSE) + 
-    scale_fill_gradient2( low="red", mid="white", high="blue", midpoint = 0 ) + 
+    scale_fill_gradient2( low="red", mid="white", high="blue", midpoint = 0 ,guide=FALSE) + 
     theme(
       axis.title.x=element_blank(),
       axis.title.y=element_blank(),
@@ -293,40 +309,130 @@ img_sig <- function(x){
     ggtitle(deparse(substitute(x)))
   gg1
 }
-  
 
+sig_dist<-function(sig)mapply(
+  function(i)min(colMeans((sig[,-i]-sig[,rep(i,ncol(sig)-1)])^2)),
+  seq(ncol(sig))
+)
+
+ord1<-order(apply(qcr_carry_level,2,sum))
+ord2<-order(apply(qcr_msig,2,sum))
+ord3<-order(apply(qcr_stvf,2,sd))
+ord4<-order(apply(qcr_msig,2,sd))
+
+all_signals_live<-rowSums(abs(qcr_stvf))>1e-3
+
+
+#qcr_stvf_f1<-structure(apply(qcr_stvf,2,roll_meanr,n=120,fill=0),dimnames=dimnames(qcr_msig))
+#img_sig(qcr_ltvf[all_signals_live,order(sig_dist(qcr_ltvf[all_signals_live,]))])
+
+proxy<-(
+    1*tret2sig_tret(qcr_tr,w=10)+
+    tret2sig_tret(qcr_tr,w=30)+
+    2*tret2sig_tret(qcr_tr,w=90)+
+    5*tret2sig_tret(qcr_tr,w=250)+
+    2*tret2sig_tret(qcr_tr,w=365)+
+    1*tret2sig_rngloc(qcr_tr,w=90)+
+    tret2sig_rngloc(qcr_tr,w=250)
+)
+
+m<-cbind(
+  pm=as.vector(qcr_msig[all_signals_live,]),
+  cl=as.vector(qcr_carry_level[all_signals_live,]),
+  cm=as.vector(qcr_carry_momentum[all_signals_live,]),
+  ltv=as.vector(qcr_ltvf[all_signals_live,]),
+  stv=as.vector(qcr_stvf[all_signals_live,]),
+  prxy=as.vector(proxy[all_signals_live,])
+)
+
+x1<-t(apply(apply(qcr_tr,2,roll_sumr,n=30,fill=0),1,rank))/ncol(qcr_tr)-0.5
+
+y1<-apply(qcr_tr,2,function(x){
+  x1<-roll_sdr(x,30,fill=0)
+  x2<-roll_meanr(x,30,fill=0)
+  ifelse(x1>0,x2/x1,0)
+})
+
+y2<-t(apply(y1,1,rank))/ncol(y1)-0.5
+
+mean(diag(cor(
+  qcr_stvf[all_signals_live,],
+  (-1)*proxy[all_signals_live,]+
+  (+1)*qcr_carry_level[all_signals_live,]+
+  (+1)*qcr_carry_momentum[all_signals_live,]+
+  (-0.5)*x1[all_signals_live,]+
+  (-0.5)*y1[all_signals_live,]
+)))
+
+pnl0<-(-(head(proxy,-1)*tail(qcr_tr,-1))[tail(all_signals_live,-1),])%>%
+  {.%*%diag(0.05/apply(.,2,sd))}
+
+pnl1<-((head(qcr_stvf,-1)*tail(qcr_tr,-1))[tail(all_signals_live,-1),])%>%
+  {.%*%diag(0.05/apply(.,2,sd))}
+
+pnl2<-((head(qcr_stvf*(sign(qcr_stvf)==sign(-proxy)),-1)*tail(qcr_tr,-1))[tail(all_signals_live,-1),])%>%
+  {.%*%diag(0.05/apply(.,2,sd))}
+
+pnl3<-((head(qcr_stvf*(sign(qcr_stvf)!=sign(-proxy)),-1)*tail(qcr_tr,-1))[tail(all_signals_live,-1),])%>%
+      {.%*%diag(0.05/apply(.,2,sd))}
+
+pnl4<-(-(head(proxy*(sign(qcr_stvf)!=sign(-proxy)),-1)*tail(qcr_tr,-1))[tail(all_signals_live,-1),])%>%
+      {.%*%diag(0.05/apply(.,2,sd))}
+
+pnl5<-(-(head(proxy*(sign(qcr_stvf)==sign(-proxy)),-1)*tail(qcr_tr,-1))[tail(all_signals_live,-1),])%>%
+      {.%*%diag(0.05/apply(.,2,sd))}
+
+pnl6<-(-(head(proxy*(sign(qcr_stvf)==0),-1)*tail(qcr_tr,-1))[tail(all_signals_live,-1),])%>%
+      {.%*%diag(0.05/apply(.,2,sd))}
+
+#plot(cumsum(rowSums(pnl4+pnl5+pnl6)/3))
+#plot(cumsum(rowSums(pnl0)))
 
 @
 \newpage
-\subsection{Signal plots}
+\subsection{Signal plots: columns are pairs ordered by average carry. Signal, proxy correlations}
 
 \begin{center}
 \begin{tabular}{ m{10cm} m{10cm} }
 \Sexpr{make_plot(
-  plot(img_sig(qcr_ltvf)),
+  plot(img_sig(qcr_ltvf[all_signals_live,ord1])),
   width="10cm",
-  height="10cm",
+  height="8cm",
   envir=environment()
 )}
 &
 \Sexpr{make_plot(
-  plot(img_sig(apply(qcr_stvf[-(1:ss),],2,rescale)-0.5)),
+  plot(img_sig(qcr_stvf[all_signals_live,ord1])),
   width="10cm",
-  height="10cm",
+  height="8cm",
   envir=environment()
 )}
 \\
 \Sexpr{make_plot(
-  plot(img_sig(qcr_carry_level)),
+  plot(img_sig(qcr_carry_level[all_signals_live,ord1])),
   width="10cm",
-  height="10cm",
+  height="8cm",
   envir=environment()
 )}
 &
 \Sexpr{make_plot(
-  plot(img_sig(qcr_carry_momentum)),
+  plot(img_sig(qcr_carry_momentum[all_signals_live,ord1])),
   width="10cm",
-  height="10cm",
+  height="8cm",
+  envir=environment()
+)}
+\\
+\Sexpr{make_plot(
+  plot(img_sig(qcr_msig[all_signals_live,ord1])),
+  width="10cm",
+  height="8cm",
+  envir=environment()
+)}
+&
+\Sexpr{make_plot(
+  corrplot.mixed(cor(m),order="AOE",lower.col = "black", tl.col = "black",tl.cex=2.5),
+  width="10cm",
+  height="8cm",
   envir=environment()
 )}
 \\
@@ -841,3 +947,4 @@ user & \Sexpr{latexTranslate(gsub("\\\\","/",system("whoami",TRUE)))} \\
 \vskip 5mm
 
 \end{document}
+
