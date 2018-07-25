@@ -42,6 +42,7 @@ require(Rtsne)
 require(knitr)
 require(stringi)
 require(RcppRoll)
+require(magick)
 
 @
 
@@ -91,21 +92,21 @@ tret2sig_rngloc <- function(x,w=91,thresh=0.05){
 }
 
 
-mean(diag(cor(tail(qcr_stvf,-ss),tail(-tret2sig_rngloc(qcr_tr,w=250),-ss))))
-mean(diag(cor(tail(qcr_stvf,-ss),tail(-tret2sig_tret(qcr_tr,w=60),-ss))))
-mean(diag(cor(tail(qcr_stvf,-ss),tail(-tret2sig_macross(qcr_tr,wf=90,ws=250),-ss))))
-
-cs1<- tail(-tret2sig_rngloc(qcr_tr,w=250),-ss) +
-  5*tail(-tret2sig_tret(qcr_tr,w=60),-ss) +
-  0.5*tail(-tret2sig_macross(qcr_tr,wf=90,ws=250),-ss)
-
-mean(diag(cor(tail(qcr_stvf,-ss),cs1)))
-
-x<-c(rep(0,59),roll_mean(qcr_stvf[-(1:ss),1],60))
-x1<-c(rep(0,179),roll_mean(qcr_stvf[-(1:ss),1],180))
-y<-c(rep(0,179),200*roll_mean(qcr_tr[-(1:ss),1],180))
-plot(-(x-x1),col=rgb(0,1,0,0.25),pch=19,ylim=c(-0.5,0.5))
-lines(y,col="red")
+# mean(diag(cor(tail(qcr_stvf,-ss),tail(-tret2sig_rngloc(qcr_tr,w=250),-ss))))
+# mean(diag(cor(tail(qcr_stvf,-ss),tail(-tret2sig_tret(qcr_tr,w=60),-ss))))
+# mean(diag(cor(tail(qcr_stvf,-ss),tail(-tret2sig_macross(qcr_tr,wf=90,ws=250),-ss))))
+# 
+# cs1<- tail(-tret2sig_rngloc(qcr_tr,w=250),-ss) +
+#   5*tail(-tret2sig_tret(qcr_tr,w=60),-ss) +
+#   0.5*tail(-tret2sig_macross(qcr_tr,wf=90,ws=250),-ss)
+# 
+# mean(diag(cor(tail(qcr_stvf,-ss),cs1)))
+# 
+# x<-c(rep(0,59),roll_mean(qcr_stvf[-(1:ss),1],60))
+# x1<-c(rep(0,179),roll_mean(qcr_stvf[-(1:ss),1],180))
+# y<-c(rep(0,179),200*roll_mean(qcr_tr[-(1:ss),1],180))
+# plot(-(x-x1),col=rgb(0,1,0,0.25),pch=19,ylim=c(-0.5,0.5))
+# lines(y,col="red")
 
 
 g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
@@ -269,6 +270,69 @@ Economics 104(2012) 228-250}.
 \\
 \end{tabular}
 \end{center}
+<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+# plot(image(Matrix(qcr_carry_level),aspect=1,main="carry level",xlab="currency pair",ylab="date")),
+
+img_sig <- function(x){
+  res<- x %>% 
+    {.[rowSums(abs(.))>1e-10,] } %>%
+    {data.table(date=as.Date(rownames(.)),.)} %>% 
+    {melt(.,id.vars="date",measure.vars=names(.)[-1])}
+  gg1 <-  ggplot(res) +
+    geom_raster(aes(x=variable,y=date,fill = value), interpolate = FALSE) + 
+    scale_fill_gradient2( low="red", mid="white", high="blue", midpoint = 0 ) + 
+    theme(
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      axis.text.x=element_blank(),
+      axis.ticks.x=element_blank(),
+      panel.grid.major = element_blank(), 
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank()
+    ) +
+    ggtitle(deparse(substitute(x)))
+  gg1
+}
+  
+
+
+@
+\newpage
+\subsection{Signal plots}
+
+\begin{center}
+\begin{tabular}{ m{10cm} m{10cm} }
+\Sexpr{make_plot(
+  plot(img_sig(qcr_ltvf)),
+  width="10cm",
+  height="10cm",
+  envir=environment()
+)}
+&
+\Sexpr{make_plot(
+  plot(img_sig(apply(qcr_stvf[-(1:ss),],2,rescale)-0.5)),
+  width="10cm",
+  height="10cm",
+  envir=environment()
+)}
+\\
+\Sexpr{make_plot(
+  plot(img_sig(qcr_carry_level)),
+  width="10cm",
+  height="10cm",
+  envir=environment()
+)}
+&
+\Sexpr{make_plot(
+  plot(img_sig(qcr_carry_momentum)),
+  width="10cm",
+  height="10cm",
+  envir=environment()
+)}
+\\
+\end{tabular}
+\end{center}
+
 
 \newpage
 \subsection{Technical signals: {\bf pm}, {\bf pr}}
@@ -295,31 +359,40 @@ reversion to g10xg3 is a genuine ``market anomaly''. this is a valuable insight
 g3regexp<- rgxccy(head(g10,3))
 
 tor<-grepl(rgxccy(head(g10,3)),colnames(qcr_tr))
-qcr_strat_long<-rowMeans(qcr[,tor])
-qcr_strat_short<-rowMeans(qcr[,!tor])
-qcr_strat<-qcr_strat_long-qcr_strat_short
+
+qcr_strat_long<-rowMeans(qcr_pm)
+qcr_strat_short<-rowMeans(qcr_pr)
+qcr_strat<-signal_df$pm+signal_df$pr
 
 ws<-as.integer(seq(from=10,to=365,length.out = 25))
 
 cv<-local({ 
-  strat<-cbind(s_long=qcr_strat_long,s_short=qcr_strat_short)
+  strat<-cbind(s_long=signal_df$pm,s_short=signal_df$pr)
   cf<-function(w){
-    cm<-cor(qcr_msig,tret2sig(qcr_rp,w,thresh=0.05))
+    cm<-cor(qcr_msig,tret2sig_rngloc(qcr_rp,w=w,thresh=0.05))
     setNames(diag(cm),colnames(qcr_tr))
   }
   cor_traj<-t(mapply(cf,ws))
   data.table(w=ws,cor_traj) 
 })  %>%
   {melt(.,id.vars="w",measure.vars=tail(names(.),-1))} %>%
-  {.$subset<-ifelse(grepl(g3regexp,.$variable),"g3","g10xg3"); .}
+  {.$subset<-ifelse(grepl(rgxccy(head(g10,3)),.$variable),"g3","g10xg3"); .}
 
 
 
 # use window size that maximizes correlation
-qcrb_long<-head(tret2sig(qcr_rp,180),-1)*tail(qcr_rp,-1)
-qcrb_short<-head(tret2sig(qcr_rp,180),-1)*tail(qcr_rp,-1)
+qcrb_long<-(head(tret2sig_rngloc(qcr_rp,w=180),-1)*tail(qcr_rp,-1)) %>%
+{structure(.,dimnames=list(tail(rownames(qcr_tr),-1),colnames(qcr_tr)) )}
 
-qcrb_strat<-rowMeans(qcrb_long[,tor])-rowMeans(qcrb_short[,!tor])
+qcrb_short<-(head(tret2sig_rngloc(qcr_rp,w=180),-1)*tail(qcr_rp,-1))%>%
+{structure(.,dimnames=list(tail(rownames(qcr_tr),-1),colnames(qcr_tr)))}
+
+
+qcrb_strat<-(
+  rowMeans(qcrb_long[,grepl(rgxccy(head(g10,3)),colnames(qcrb_long))])%>%{0.05*./sd(.)} -
+  rowMeans(qcrb_short[,grepl(rgxccy(tail(g10,7)),colnames(qcrb_short))])%>%{0.05*./sd(.)}
+)
+
 
 gg_qcr<-data.table(
   date=as.Date(rownames(qcr),format="%Y-%m-%d"),
