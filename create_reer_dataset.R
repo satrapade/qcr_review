@@ -14,7 +14,7 @@ require(RSQLite)
 require(DBI)
 require(Matrix)
 require(Matrix.utils)
-require(Rblpapi)
+#require(Rblpapi)
 
 off_site<-if(Sys.info()["sysname"]=="Windows"){FALSE}else{TRUE}
 
@@ -141,10 +141,6 @@ reersn_rv<-structure(
   dimnames=list(rownames(reersn_em),colnames(qcr_stvf))
 )
 
-reersn_rvchg<- reersn_rv - apply(reersn_rv,2,roll_meanr,n=250,fill=0)
-ndx<-intersect(rownames(reersn_rvchg),rownames(qcr_stvf%>%{.[which(rowSums(abs(.))>1e-3),]}))
-mean(sign(reersn_rvchg[ndx,])*sign(qcr_stvf[ndx,]))
-
 if(!off_site)reersb_bdh<-memoizedCall(
   Rblpapi::bdh,
   securities=paste(reersb,"Index"),
@@ -179,11 +175,6 @@ reersb_rv<-structure(
   dimnames=list(rownames(reersn_em),colnames(qcr_stvf))
 )
 
-reersb_rvchg<- reersb_rv - apply(reersb_rv,2,roll_meanr,n=250,fill=0)
-ndx<-intersect(rownames(reersb_rvchg),rownames(qcr_stvf%>%{.[which(rowSums(abs(.))>1e-3),]}))
-
-mean(sign(reersn_rvchg[ndx,])*sign(qcr_stvf[ndx,]))
-mean(sign(reersb_rvchg[ndx,])*sign(qcr_stvf[ndx,]))
 
 mean(sign(
   sign(qcr_carry_level[ndx,])+
@@ -275,5 +266,39 @@ combined_xcarry_pnl<-head(combined-sign(qcr_carry_level),-1)*tail(qcr_tr,-1)
 carry_pnl<-head(sign(qcr_carry_level),-1)*tail(qcr_tr,-1)
 
 img_sig(combined[,order(apply(qcr_carry_level,2,sum))])
+
+scor<-function(x,y){
+  ndx<-intersect(rownames(x),rownames(y))
+  res<-cor(x[ndx,],y[ndx,])
+  mean(diag(res))
+}
+
+ndx<-intersect(rownames(reersn_rv),rownames(qcr_tr))
+
+reersn_rvchg<- reersn_rv - apply(reersn_rv,2,roll_meanr,n=250,fill=0)
+reersb_rvchg<- reersb_rv - apply(reersb_rv,2,roll_meanr,n=250,fill=0)
+
+x1<-tret2sig_rngloc(apply(reersn_rv[ndx,],2,function(x)c(0,diff(x))),w=120)
+x2<-tret2sig_rngloc(sign(apply(reersn_rv[ndx,],2,function(x)c(0,diff(x)))),w=365*4)
+x<-0.5*x1+0.5*x2+tret2sig_rngloc(qcr_tr[ndx,],w=30)
+scor(x,qcr_stvf)
+
+pnl1<-head(x,-1)*tail(qcr_tr[ndx,],-1)
+pnl2<-head(qcr_stvf[ndx,],-1)*tail(qcr_tr[ndx,],-1)
+
+nzv<-function(v){
+  dv<-diff(v)
+  nz<-abs(dv)>0
+  i<-cumsum(c(1,nz))
+  nzv<-c(0,dv[nz])[i]
+  nzv
+}
+v<-apply(reersn_rv[ndx,],2,nzv)
+
+w<-apply(reersn_rv[ndx,],2,nzv)-apply(qcr_tr[ndx,],2,roll_sumr,n=29,fill=0)
+u<-apply(reersn_rv[ndx,],2,nzv)
+
+mean(diag(cor(qcr_msig[ndx,],qcr_stvf[ndx,])))
+
 
 
