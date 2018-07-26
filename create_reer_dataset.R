@@ -16,6 +16,8 @@ require(Matrix)
 require(Matrix.utils)
 require(Rblpapi)
 
+off_site<-if(Sys.info()["sysname"]=="Windows"){FALSE}else{TRUE}
+
 source("https://raw.githubusercontent.com/satrapade/pairs/master/utility/nn_cast.R")
 
 rgxccy<- .%>% {paste0(.,collapse="|")} %>% {paste0("^(",.,")(",.,")$")}
@@ -103,9 +105,9 @@ qcr_msig<-fread("momentum_signal.csv") %>%
 start<-"2004-12-31"
 end<-max(rownames(qcr_tr))
 
-rconn<-Rblpapi::blpConnect()
+if(!off_site)rconn<-Rblpapi::blpConnect()
 
-reersn_bdh<-memoizedCall(
+if(!off_site)reersn_bdh<-memoizedCall(
   Rblpapi::bdh,
   securities=paste(reersn,"Index"),
   fields="PX_LAST",
@@ -113,7 +115,7 @@ reersn_bdh<-memoizedCall(
   end.date=as.Date(end)
 )
 
-reersn_df<- reersn_bdh %>% 
+if(!off_site)reersn_df<- reersn_bdh %>% 
   {mapply(
     function(n,df){
       data.table(ticker=n,ccy=names(reersn)[grepl(gsub(" Index$","",n),reersn)],df)
@@ -122,6 +124,8 @@ reersn_df<- reersn_bdh %>%
     df=.,SIMPLIFY=FALSE
   )} %>% 
   {do.call(rbind,.)}
+
+if(off_site)reersn_df<-fread("reersn_df.csv")
 
 reersn_m<-NNcast(reersn_df,i_name="date",j_name="ccy",v_name="PX_LAST")
 
@@ -141,7 +145,7 @@ reersn_rvchg<- reersn_rv - apply(reersn_rv,2,roll_meanr,n=250,fill=0)
 ndx<-intersect(rownames(reersn_rvchg),rownames(qcr_stvf%>%{.[which(rowSums(abs(.))>1e-3),]}))
 mean(sign(reersn_rvchg[ndx,])*sign(qcr_stvf[ndx,]))
 
-reersb_bdh<-memoizedCall(
+if(!off_site)reersb_bdh<-memoizedCall(
   Rblpapi::bdh,
   securities=paste(reersb,"Index"),
   fields="PX_LAST",
@@ -149,7 +153,7 @@ reersb_bdh<-memoizedCall(
   end.date=as.Date(end)
 )
 
-reersb_df<- reersb_bdh %>% 
+if(!off_site)reersb_df<- reersb_bdh %>% 
   {mapply(
     function(n,df){
       data.table(ticker=n,ccy=names(reersn)[grepl(gsub(" Index$","",n),reersb)],df)
@@ -158,6 +162,8 @@ reersb_df<- reersb_bdh %>%
     df=.,SIMPLIFY=FALSE
   )} %>% 
   {do.call(rbind,.)}
+
+if(off_site)reersb_df<-fread("reersb_df.csv")
 
 reersb_m<-NNcast(reersb_df,i_name="date",j_name="ccy",v_name="PX_LAST")
 
