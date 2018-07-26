@@ -364,7 +364,7 @@ m<-cbind(
 
 @
 \newpage
-\subsection{Signal plots: columns are pairs ordered by average carry. Correlation: signals and proxy}
+\subsection{Signal tiles: columns are pairs ordered by average carry. Correlation: signals and proxy}
 
 \begin{center}
 \begin{tabular}{ m{10cm} m{10cm} }
@@ -414,7 +414,7 @@ m<-cbind(
 \end{center}
 
 \newpage
-\subsection{Signal plots }
+\subsection{Signals: cummulative sign plots }
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
 
 
@@ -517,6 +517,51 @@ gg_pr_p <- sign(qcr_msig%*%diag(ifelse(grepl(rgxccy(tail(g10,7)),colnames(qcr_ms
 \\
 \end{tabular}
 \end{center}
+
+\newpage
+\subsection{Combined signals: signal tile, cummulative sign plot}
+<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+combined<-( 
+  sign(qcr_msig%*%diag(ifelse(grepl(rgxccy(head(g10,3)),colnames(qcr_msig)),1,0))) +
+  sign(qcr_msig%*%diag(ifelse(grepl(rgxccy(tail(g10,7)),colnames(qcr_msig)),-1,0))) +
+  sign(qcr_ltvf) + 
+  sign(qcr_stvf) + 
+  sign(qcr_carry_level) + 
+  sign(qcr_carry_momentum)
+) 
+
+gg_combined_p <- sign(combined) %>%
+  {apply(.,2,cumsum)[seq(nrow(.))>head(which(rowSums(abs(.))>1e-3),1),]} %>% 
+  {data.table(date=as.Date(rownames(.)),.)} %>% 
+  {melt(.,id.vars="date",measure.vars=names(.)[-1])} %>% 
+  ggplot() +
+  geom_line(aes(x=date,y=value,col=variable,group=variable),show.legend=FALSE)+
+  ggtitle("COMBINED")
+
+@
+
+\vskip 5mm
+
+\begin{center}
+\begin{tabular}{ m{10cm} m{10cm} }
+\Sexpr{make_plot(
+  plot(img_sig(combined[all_signals_live,ord1])),
+  width="10cm",
+  height="8cm",
+  envir=environment()
+)}
+&
+\Sexpr{make_plot(
+  plot(gg_combined_p),
+  width="10cm",
+  height="8cm",
+  envir=environment()
+)}
+\\
+\end{tabular}
+\end{center}
+
+\vskip 5mm
 
 
 \newpage
