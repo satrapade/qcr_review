@@ -57,6 +57,25 @@ if(length(x)>0)file.remove(x)
 
 source("https://raw.githubusercontent.com/satrapade/latex_utils/master/latex_helpers_v2.R")
 
+g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
+
+reersn<-c(
+  USD="BISNUSR",EUR="BISNEUR",JPY="BISNJPR",GBP="BISNGBR",AUD="BISNAUR",
+  CAD="BISNCAR",CHF="BISNCHR",SEK="BISNSER",NZD="BISNNZR",NOK="BISNNOR",
+  DKK="BISNDKR"
+)
+
+reersb<-c(
+  USD="BISBUSR",EUR="BISBEUR",JPY="BISBJPR",GBP="BISBGBR",AUD="BISBAUR",
+  CAD="BISBCAR",CHF="BISBCHR",SEK="BISBSER",NZD="BISBNZR",NOK="BISBNOR",
+  DKK="BISBDKR"
+)
+
+ppp<-c(
+  USD="BPPPCPUS",EUR="BPPPCPEU",JPY="BPPPCPJP",GBP="BPPPCPGB",AUD="BPPPCPAU",
+  CAD="BPPPCPCA",CHF="BPPPCPCH",SEK="BPPPCPSE",NZD="BPPPCPNZ",NOK="BPPPCPNO",
+  DKK="BISBDKR"
+)
 
 @
 
@@ -102,7 +121,6 @@ tret2sig_rngloca <- function(x,w=91,ws=91,thresh=0.05){
 }
 
 
-g10<-c("USD","EUR","JPY","GBP","AUD","CAD","CHF","SEK","NZD", "NOK")
 
 rgxccy<- .%>% {paste0(.,collapse="|")} %>% {paste0("^(",.,")(",.,")$")}
 sharpe<-function(strat)sqrt(356)*mean(strat)/sd(strat)
@@ -395,6 +413,114 @@ m<-cbind(
 \end{tabular}
 \end{center}
 
+\newpage
+\subsection{Signal plots }
+<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+
+
+gg_sv_p <- sign(qcr_stvf) %>%
+  {apply(.,2,cumsum)[seq(nrow(.))>head(which(rowSums(abs(.))>1e-3),1),]} %>% 
+  {data.table(date=as.Date(rownames(.)),.)} %>% 
+  {melt(.,id.vars="date",measure.vars=names(.)[-1])} %>% 
+  ggplot() +
+  geom_line(aes(x=date,y=value,col=variable,group=variable),show.legend=FALSE)+
+  ggtitle("STVF")
+
+
+gg_lv_p <- sign(qcr_ltvf) %>%
+  {apply(.,2,cumsum)[seq(nrow(.))>head(which(rowSums(abs(.))>1e-3),1),]} %>% 
+  {data.table(date=as.Date(rownames(.)),.)} %>% 
+  {melt(.,id.vars="date",measure.vars=names(.)[-1])} %>% 
+  ggplot() +
+  geom_line(aes(x=date,y=value,col=variable,group=variable),show.legend=FALSE)+
+  ggtitle("LTVF")
+
+gg_cl_p <- sign(qcr_carry_level) %>%
+  {apply(.,2,cumsum)[seq(nrow(.))>head(which(rowSums(abs(.))>1e-3),1),]} %>% 
+  {data.table(date=as.Date(rownames(.)),.)} %>% 
+  {melt(.,id.vars="date",measure.vars=names(.)[-1])} %>% 
+  ggplot() +
+  geom_line(aes(x=date,y=value,col=variable,group=variable),show.legend=FALSE)+
+  ggtitle("CARRY LEVEL")
+
+gg_cm_p <- sign(qcr_carry_momentum) %>%
+  {apply(.,2,cumsum)[seq(nrow(.))>head(which(rowSums(abs(.))>1e-3),1),]} %>% 
+  {data.table(date=as.Date(rownames(.)),.)} %>% 
+  {melt(.,id.vars="date",measure.vars=names(.)[-1])} %>% 
+  ggplot() +
+  geom_line(aes(x=date,y=value,col=variable,group=variable),show.legend=FALSE)+
+  ggtitle("CARRY MOMENTUM")
+
+
+gg_pm_p <- sign(qcr_msig%*%diag(ifelse(grepl(rgxccy(head(g10,3)),colnames(qcr_msig)),1,0))) %>%
+  {apply(.,2,cumsum)[seq(nrow(.))>head(which(rowSums(abs(.))>1e-3),1),]} %>% 
+  {data.table(date=as.Date(rownames(.)),.)} %>% 
+  {melt(.,id.vars="date",measure.vars=names(.)[-1])} %>% 
+  ggplot() +
+  geom_line(aes(x=date,y=value,col=variable,group=variable),show.legend=FALSE)+
+  ggtitle("PRICE MOMENTUM")
+
+gg_pr_p <- sign(qcr_msig%*%diag(ifelse(grepl(rgxccy(tail(g10,7)),colnames(qcr_msig)),-1,0))) %>%
+  {apply(.,2,cumsum)[seq(nrow(.))>head(which(rowSums(abs(.))>1e-3),1),]} %>% 
+  {data.table(date=as.Date(rownames(.)),.)} %>% 
+  {melt(.,id.vars="date",measure.vars=names(.)[-1])} %>% 
+  ggplot() +
+  geom_line(aes(x=date,y=value,col=variable,group=variable),show.legend=FALSE)+
+  ggtitle("PRICE REVERSION")
+
+
+@
+
+\begin{center}
+\begin{tabular}{ m{10cm} m{10cm} }
+\Sexpr{make_plot(
+  plot(gg_sv_p),
+  width="10cm",
+  height="8cm",
+  envir=environment()
+)}
+&
+\Sexpr{make_plot(
+  plot(gg_lv_p),
+  width="10cm",
+  height="8cm",
+  envir=environment()
+)}
+\\
+\Sexpr{make_plot(
+  plot(gg_cl_p),
+  width="10cm",
+  height="8cm",
+  envir=environment()
+)}
+&
+\Sexpr{make_plot(
+  plot(gg_cm_p),
+  width="10cm",
+  height="8cm",
+  envir=environment()
+)}
+\\
+\Sexpr{make_plot(
+  plot(gg_pm_p),
+  width="10cm",
+  height="8cm",
+  envir=environment()
+)}
+&
+\Sexpr{make_plot(
+  plot(gg_pr_p),
+  width="10cm",
+  height="8cm",
+  envir=environment()
+)}
+\\
+\end{tabular}
+\end{center}
+
+
+\newpage
+\subsection{Correlation trajectories: signals vs rolling returns }
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
 
 qcr_px<-apply(qcr_tr,2,cumsum)
@@ -420,8 +546,18 @@ gg_cor_traj <- corr_traj %>%
  ggplot()+geom_point(aes(x=i,y=value,col=variable,group=variable))
 
 @
-\newpage
-\subsection{Cross-correlation functions: signals vs rolling returns }
+
+
+\vskip 5mm
+
+We compute rolling returns for window lengths ranging from \Sexpr{min(corr_traj$i)} to 
+\Sexpr{max(corr_traj$i)} days. The signs of these rolling returns are correlated 
+to the signs of QCR signals. The resulting vectors are similar to a one-sided 
+cross-correlation function with the difference that we get correlation as a 
+function of window size rather than correlation as a function of lag. We call these
+curves ``correlation trajectories''. If the signal against which we construct a correlation
+trajectory in some way depends on a finite window of returns, then we expect the trajectory
+to have an extremum around the signal's effective window.
 
 \vskip 5mm
 
@@ -951,4 +1087,5 @@ user & \Sexpr{latexTranslate(gsub("\\\\","/",system("whoami",TRUE)))} \\
 \vskip 5mm
 
 \end{document}
+
 
