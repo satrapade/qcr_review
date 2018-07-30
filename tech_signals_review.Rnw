@@ -78,7 +78,31 @@ ppp<-c(
   DKK="BISBDKR"
 )
 
+
 @
+
+\newpage
+\section{Performance}
+<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+
+qcr_strat<-fread("qcr_returns.csv")[,.(
+  date=as.Date(stri_sub(V1,1,10),format="%Y-%m-%d"),
+  datestring=stri_sub(V1,1,10),
+  perf=Strategy
+)]
+
+gg_perf<-qcr_strat %>% ggplot() + geom_line(aes(x=date,y=cumsum(perf)))
+
+@
+
+\begin{center}
+\Sexpr{make_plot(
+  plot(gg_perf),
+  height="10cm",
+  width="10cm"
+)}
+\end{center}
+
 
 \newpage
 \section{``Review of Technical Signals'' document}
@@ -125,6 +149,7 @@ tret2sig_rngloca <- function(x,w=91,ws=91,thresh=0.05){
 
 rgxccy<- .%>% {paste0(.,collapse="|")} %>% {paste0("^(",.,")(",.,")$")}
 sharpe<-function(strat)sqrt(356)*mean(strat)/sd(strat)
+
 
 qcr_tr<-fread("currency_total_returns.csv") %>% 
 {as.matrix(.[,2:(ncol(.)-1)],rownames=.$V1)}
@@ -531,6 +556,15 @@ combined<-(
   sign(qcr_carry_momentum)
 ) 
 
+
+combined_pnl<- (head(combined,-1)*tail(qcr_tr,-1)) %>%
+  {structure(.%*%diag(0.05/apply(.,2,sd)),dimnames=dimnames(.))} %>%
+  rowSums
+
+qcr_pnl_vector<-qcr_strat[,setNames(perf/sd(perf),datestring)]
+
+ndx<-intersect(names(qcr_pnl_vector),names(combined_pnl))
+
 gg_combined_p <- sign(combined) %>%
   {apply(.,2,cumsum)[seq(nrow(.))>head(which(rowSums(abs(.))>1e-3),1),]} %>% 
   {data.table(date=as.Date(rownames(.)),.)} %>% 
@@ -538,6 +572,23 @@ gg_combined_p <- sign(combined) %>%
   ggplot() +
   geom_line(aes(x=date,y=value,col=variable,group=variable),show.legend=FALSE)+
   ggtitle("COMBINED")
+
+gg_bozo_vs_real<-data.table(
+  date=as.Date(ndx,format="%Y-%m-%d"),
+  qcr=cumsum(qcr_pnl_vector[ndx]),
+  combined=cumsum(combined_pnl[ndx])
+) %>% 
+  {melt(.,id.vars="date",measure.vars=c("qcr","combined"))} %>%
+  ggplot() +
+  geom_line(aes(x=date,y=value,col=variable,group=variable))
+
+gg_bozo_vs_real_cumpnl<-data.table(
+  date=as.Date(ndx,format="%Y-%m-%d"),
+  qcr=cumsum(qcr_pnl_vector[ndx]),
+  combined=cumsum(combined_pnl[ndx])
+) %>% 
+  ggplot() +
+  geom_point(aes(x=qcr,y=combined))
 
 @
 
@@ -554,6 +605,20 @@ gg_combined_p <- sign(combined) %>%
 &
 \Sexpr{make_plot(
   plot(gg_combined_p),
+  width="10cm",
+  height="8cm",
+  envir=environment()
+)}
+\\
+\Sexpr{make_plot(
+  plot(gg_bozo_vs_real),
+  width="10cm",
+  height="8cm",
+  envir=environment()
+)}
+&
+\Sexpr{make_plot(
+  plot(gg_bozo_vs_real_cumpnl),
   width="10cm",
   height="8cm",
   envir=environment()
