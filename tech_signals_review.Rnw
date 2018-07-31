@@ -1179,6 +1179,13 @@ prevent marketing the strategy as being purely driven by risk premia
 
 \newpage
 \subsection{Fair value signals: {\bf sv}, {\bf lv}}
+<<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
+ppp<-fread("ppp_df.csv") %>% NNcast(i_name="date",j_name="ticker",v_name="PX_LAST")
+reersb<-fread("reersb_df.csv") %>% NNcast(i_name="date",j_name="ticker",v_name="PX_LAST")
+reersn<-fread("reersn_df.csv") %>% NNcast(i_name="date",j_name="ticker",v_name="PX_LAST")
+
+@
+
 
 \newpage
 \section{This document }
