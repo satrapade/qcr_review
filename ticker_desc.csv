@@ -1,0 +1,27 @@
+ticker,NAME
+EURUSDCR Curncy,EUR-USD Carry Return
+.EURUSDCC Index,""
+.EURCSG Index,""
+.EURCSF Index,""
+.EURCSI Index,""
+.USDCS Index,""
+.ECBFEDTA Index,""
+CESIEUR Index,Citi Economic Surprise Index -
+CESIUSD Index,Citi Economic Surprise - Unite
+.EUREQFLO Index,""
+WIRAWRLD Index,Intl Reserve Assets Excluding
+GTDEM10YR Corp,BUNDESREPUB. DEUTSCHLAND
+GTFRF10YR Corp,FRANCE (GOVT OF)
+GTITL10YR Corp,BUONI POLIENNALI DEL TES
+USGG10YR Index,US Generic Govt 10 Year Yield
+EUCRBRDT Index,Bloomberg European Dated Brent
+USCRWTIC Index,Bloomberg West Texas Intermedi
+MPMIEZCA Index,Markit Eurozone Composite PMI
+MPMIUSCA Index,Markit US Composite PMI SA
+.EURPERS Index,EUR Peripheral Spread 10Y
+GTDEMII10YR Corp,DEUTSCHLAND I/L BOND
+GTFRFII10YR Corp,FRANCE (GOVT OF)
+GTITLII10YR Corp,BUONI POLIENNALI DEL TES
+GTII10 Govt,TSY INFL IX N/B
+CTOTEUR Index,Citi Terms of Trade Index - Eu
+CTOTUSD Index,Citi Terms of Trade Index - Un
