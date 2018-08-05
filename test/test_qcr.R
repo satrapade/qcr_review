@@ -29,6 +29,7 @@ make_date_range<-function(start, end){
   return(res)
 }
 
+n<-fread("ticker_desc.csv")
 
 x<-fread("EURUSD.csv") %>% 
   {structure(do.call(cbind,.[,-1]),dimnames=list(.[[1]],names(.)[-1]))}

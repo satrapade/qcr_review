@@ -390,7 +390,7 @@ m<-cbind(
 
 @
 \newpage
-\subsection{Signal tiles: columns are pairs ordered by average carry. Correlation: signals and proxy}
+\subsection{Signal rasters: columns are pairs ordered by average carry. Correlation: signals and proxy}
 
 \begin{center}
 \begin{tabular}{ m{10cm} m{10cm} }
@@ -545,7 +545,7 @@ gg_pr_p <- sign(qcr_msig%*%diag(ifelse(grepl(rgxccy(tail(g10,7)),colnames(qcr_ms
 \end{center}
 
 \newpage
-\subsection{Combined signals: signal tile, cummulative sign plot}
+\subsection{Combined signals: signal raster, cummulative sign plot}
 <<,cache=FALSE, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, results="hide">>=
 combined<-( 
   sign(qcr_msig%*%diag(ifelse(grepl(rgxccy(head(g10,3)),colnames(qcr_msig)),1,0))) +
